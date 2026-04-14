@@ -1,38 +1,32 @@
 ---
-description: "增量同步仓库最近变更到 wiki"
+description: "增量同步仓库最近变更 — 代码有新提交后使用，只处理变化的部分而非全量重扫"
 agent: "wiki"
 ---
 
 增量同步仓库 `$ARGUMENTS` 的最近变更到 wiki。
 
-## 步骤
+与 `/lcw-ingest` 的区别：ingest 从零理解整个 repo，diff 只关注"什么变了"。这样更快，也避免重新处理未变化的模块。
 
-1. 读取 `__wiki__/SCHEMA.md` 和 `__wiki__/index.md`
-2. 读取 `__wiki__/repos/$1.md` 的 `last_synced_commit` frontmatter 字段
-3. 在仓库 `$ARGUMENTS` 中执行 `git log --oneline {last_synced_commit}..HEAD` 查看新提交
-   - 如果 `last_synced_commit` 缺失，回退到 `git log --oneline --since="{last_synced}"` 按日期过滤
-4. 如果没有新提交，报告"已是最新"并结束
-5. 用 `git diff {last_synced_commit}..HEAD --stat` 确定变更文件范围
-6. 对每个受影响的模块：
-   - 读取变更的文件
-   - 更新对应的 `__wiki__/modules/` 页面
-7. 如果变更涉及接口变动（新增/修改 API、proto、路由），更新 `__wiki__/interfaces/` 页面
-8. 如果变更包含架构级决策（新依赖、重大重构），创建 `__wiki__/decisions/` 页面
-9. 如果发现新问题，创建 `__wiki__/issues/` 页面
-10. 检查变更是否涉及业务词汇变动（类型重命名、新增领域概念、注释中术语变化），如有则更新 `__wiki__/glossary.md`
-11. 更新所有受影响页面的 `last_synced` 和 `last_synced_commit`（当前 HEAD 的 short sha）
-12. 如果变更影响了 repo 间的协作关系，更新 `__wiki__/overview.md`
-13. 更新 `__wiki__/index.md`
-14. 在 `__wiki__/log.md` 顶部追加记录（注意：最新记录在最前）：
+## 确定变更范围
 
+读取 `repos/$1.md` 的 `last_synced_commit`，用 `git log {sha}..HEAD` 查看新提交。如果 sha 缺失或无效（可能被 rebase），回退到按 `last_synced` 日期过滤。
+
+如果没有新提交，报告"已是最新"并结束。如果变更超过 50 个文件或涉及大规模重构，建议用户改用 `/lcw-ingest` 全量重建——增量更新不适合结构性变化。
+
+## 更新 wiki
+
+对每个受影响的模块，读取变更文件，更新对应 wiki 页面。同时关注：
+- 接口变动（新增/修改 API、proto、路由）→ 更新 `interfaces/`
+- 架构级决策（新依赖、重大重构）→ 创建 `decisions/`
+- 新问题 → 创建 `issues/`
+- 业务词汇变动（类型重命名、新概念、注释中术语变化）→ 更新 `glossary.md`
+- repo 间协作关系变化 → 更新 `overview.md`
+
+更新所有受影响页面的 `last_synced` 和 `last_synced_commit`。
+
+log.md 记录：
 ```
-## [YYYY-MM-DDTHH:MM] diff | {repo名}
+## [ISO时间] diff | {repo名}
 - 新提交：{N} 个，涉及 {M} 个文件
-- 更新：{页面列表}
-- 新建：{页面列表}（如有）
+- 更新/新建：{页面列表}
 ```
-
-## 注意
-
-- 增量同步关注"什么变了"，不重新理解整个 repo
-- 如果变更范围超过 50 个文件或涉及大规模重构，建议用户改用 `/lcw-ingest` 全量重建

@@ -69,7 +69,12 @@ agent: "wiki"
     - 整理 `__wiki__/interfaces/` 目录
     - 确保接口两端的 repo 页面互相链接
 
-14. 在 `__wiki__/log.md` 顶部追加总结：
+14. 整合 `__wiki__/glossary.md`（业务词汇对照表）：
+    - 跨 repo 对照：找出同一概念在不同 repo 中的命名差异
+    - 合并同义条目，确定规范术语
+    - 标记不一致项，记录各 repo 的具体用法
+
+15. 在 `__wiki__/log.md` 顶部追加总结：
 
 ```
 ## [YYYY-MM-DDTHH:MM] ingest-all | 批量摄入完成
@@ -79,4 +84,4 @@ agent: "wiki"
 - 下一步建议: /lcw-lint 检查健康状态
 ```
 
-15. 向用户展示完成报告。
+16. 向用户展示完成报告。

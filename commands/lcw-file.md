@@ -1,37 +1,42 @@
 ---
-description: "把当前对话中有价值的内容归档到 wiki"
+description: "归档对话洞察到 wiki — 好的分析不该消失在聊天历史里，用这个命令把它变成持久知识"
 agent: "wiki"
 ---
 
 将当前对话中的分析、发现或洞察归档为 wiki 页面：`$ARGUMENTS`
 
-## 步骤
+## 为什么需要归档
 
-1. 读取 `__wiki__/SCHEMA.md` 确认页面模板
-2. 回顾当前对话，提炼核心内容
-3. 判断内容最适合的 wiki 类别：
-   - 跨模块分析、调用链梳理、对比 → `__wiki__/queries/$ARGUMENTS.md`
-   - 发现的设计模式或约定 → `__wiki__/concepts/$ARGUMENTS.md`
-   - 架构决策讨论 → `__wiki__/decisions/{NNN}-$ARGUMENTS.md`（自动分配编号）
-   - 发现的问题或风险 → `__wiki__/issues/$ARGUMENTS.md`
-4. 按 `SCHEMA.md` 中对应类别的模板创建页面，**严格使用该类别的完整 frontmatter**：
-   - queries → 必须有 `question`, `date`, `related_repos`, `source`
-   - concepts → 必须有 `related_repos`, `tags`, `date`
-   - decisions → 必须有 `status`, `date`, `related_repos`，编号自动递增
-   - issues → 必须有 `severity`, `status`, `related_repos`, `date`
-   - 提炼核心洞察，不是复制聊天记录
-   - 添加 `[[wikilink]]` 链接到相关已有页面
-5. 反向更新：在被引用的已有页面中补充对新页面的链接
-6. 更新 `__wiki__/index.md`
-7. 在 `__wiki__/log.md` 顶部追加（注意：最新记录在最前）：
+对话是短暂的，wiki 是持久的。一次深度调试可能揭示了三个模块的隐藏耦合，一次架构讨论可能产生了关键决策——如果不归档，下次遇到同样问题还要从头分析。
 
+## 判断类别
+
+回顾当前对话，提炼核心内容（提炼，不是复制聊天记录），选择最合适的归档位置：
+
+- 跨模块分析、调用链梳理、对比 → `queries/`
+- 设计模式或约定 → `concepts/`
+- 架构决策讨论 → `decisions/{NNN}-name.md`（自动分配编号）
+- 问题或风险 → `issues/`
+
+为什么要区分类别：不同类别有不同的生命周期。Decision 一旦确定很少变；issue 会被修复；query 的价值在于分析过程本身。类别决定了未来谁会找到它、怎么找到它。
+
+## 写入
+
+按 `SCHEMA.md` 中对应类别的模板创建页面，**严格使用该类别要求的完整 frontmatter**：
+
+- queries → `question`, `date`, `related_repos`, `source`
+- concepts → `related_repos`, `tags`, `date`
+- decisions → `status`, `date`, `related_repos`
+- issues → `severity`, `status`, `related_repos`, `date`
+
+添加 `[[wikilink]]` 链接到相关已有页面。同时在被引用的已有页面中补充反向链接——单向链接等于半个链接，只有双向才能形成知识网络。
+
+更新 `index.md`。
+
+log.md 记录：
 ```
-## [YYYY-MM-DDTHH:MM] file | {页面名}
+## [ISO时间] file | {页面名}
 - 类别：{queries|concepts|decisions|issues}
 - 来源：当前对话
 - 链接到：{关联页面列表}
 ```
-
-## 目的
-
-对话是短暂的，wiki 是持久的。好的分析不该消失在聊天历史里。

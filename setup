@@ -6,33 +6,23 @@ LCW_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 
 # ─── Parse flags ──────────────────────────────────────────────
 
-HOST=""
+HOSTS=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --host)   HOST="$2"; shift 2 ;;
-    --host=*) HOST="${1#--host=}"; shift ;;
+    --host)   HOSTS="$HOSTS $2"; shift 2 ;;
+    --host=*) HOSTS="$HOSTS ${1#--host=}"; shift ;;
     *)        shift ;;
   esac
 done
 
-# ─── Auto-detect host ────────────────────────────────────────
+# ─── Auto-detect: install for all found tools ────────────────
 
-if [ -z "$HOST" ]; then
-  if command -v claude >/dev/null 2>&1; then
-    HOST="claude"
-  elif command -v codex >/dev/null 2>&1; then
-    HOST="codex"
-  elif command -v opencode >/dev/null 2>&1; then
-    HOST="opencode"
-  else
-    HOST="claude"
-  fi
+if [ -z "$HOSTS" ]; then
+  command -v claude   >/dev/null 2>&1 && HOSTS="$HOSTS claude"
+  command -v codex    >/dev/null 2>&1 && HOSTS="$HOSTS codex"
+  command -v opencode >/dev/null 2>&1 && HOSTS="$HOSTS opencode"
+  [ -z "$HOSTS" ] && HOSTS="claude"
 fi
-
-case "$HOST" in
-  claude|codex|opencode) ;;
-  *) echo "Unknown host: $HOST (expected: claude, codex, opencode)" >&2; exit 1 ;;
-esac
 
 # ─── Link commands ────────────────────────────────────────────
 
@@ -44,27 +34,28 @@ link_commands() {
   done
 }
 
-case "$HOST" in
-  claude)
-    link_commands "$HOME/.claude/commands"
-    echo "lcw ready (claude)."
-    echo "  commands: ~/.claude/commands/lcw-*.md"
-    ;;
-  codex)
-    link_commands "$HOME/.codex/commands"
-    echo "lcw ready (codex)."
-    echo "  commands: ~/.codex/commands/lcw-*.md"
-    ;;
-  opencode)
-    # OpenCode uses project-level commands — link to a global agent config
-    link_commands "$HOME/.opencode/commands"
-    mkdir -p "$HOME/.opencode/agents"
-    ln -sf "$LCW_DIR/agents/wiki.md" "$HOME/.opencode/agents/wiki.md"
-    echo "lcw ready (opencode)."
-    echo "  commands: ~/.opencode/commands/lcw-*.md"
-    echo "  agent:    ~/.opencode/agents/wiki.md"
-    ;;
-esac
+for HOST in $HOSTS; do
+  case "$HOST" in
+    claude)
+      link_commands "$HOME/.claude/commands"
+      echo "lcw ready (claude).  commands: ~/.claude/commands/lcw-*.md"
+      ;;
+    codex)
+      link_commands "$HOME/.codex/commands"
+      echo "lcw ready (codex).   commands: ~/.codex/commands/lcw-*.md"
+      ;;
+    opencode)
+      link_commands "$HOME/.opencode/commands"
+      mkdir -p "$HOME/.opencode/agents"
+      ln -sf "$LCW_DIR/agents/wiki.md" "$HOME/.opencode/agents/wiki.md"
+      echo "lcw ready (opencode). commands: ~/.opencode/commands/lcw-*.md"
+      ;;
+    *)
+      echo "Unknown host: $HOST (expected: claude, codex, opencode)" >&2
+      exit 1
+      ;;
+  esac
+done
 
 echo ""
 echo "Run /lcw-init in your project to create the wiki."

@@ -13,9 +13,11 @@ agent: "wiki"
 
 - **未摄入**（无 `repos/{name}.md`）→ 执行全量 ingest
 - **已摄入且有新提交**（`git log {sha}..HEAD` 非空）→ 执行 diff 增量更新
-- **已摄入且无新提交** → 跳过
+- **已摄入且无新提交** → 执行局部 lint（`/lcw-lint {repo}`）
 
-生成执行计划并展示给用户确认，明确标注每个 repo 的操作类型（ingest / diff / skip）。用户可以调整：强制某个 repo 全量重建，或排除某些 repo。
+为什么无新提交也不跳过：代码没变不代表 wiki 是对的。之前的 ingest/diff 可能遗漏了术语、链接可能断了、wiki 描述可能与代码有微妙偏差。局部 lint 成本很低，但能修正这些累积的小问题。
+
+生成执行计划并展示给用户确认，明确标注每个 repo 的操作类型（ingest / diff / lint）。用户可以调整：强制某个 repo 全量重建，或排除某些 repo。
 
 为什么要先展示计划：批量摄入是耗时操作，用户需要知道范围和预期，也可能想排除测试仓库或已废弃的 repo。
 
@@ -54,7 +56,7 @@ agent: "wiki"
 log.md 记录：
 ```
 ## [ISO时间] ingest-all | 批量同步完成
-- 总 repo 数: N (ingest: A, diff: B, skip: C, 失败: D)
+- 总 repo 数: N (ingest: A, diff: B, lint: C, 失败: D)
 - 总页面数: X (新建: Y, 更新: Z)
 - 下一步建议: /lcw-lint
 ```

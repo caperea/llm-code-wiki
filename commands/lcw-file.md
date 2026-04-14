@@ -14,10 +14,13 @@ agent: "wiki"
    - 发现的设计模式或约定 → `__wiki__/concepts/$ARGUMENTS.md`
    - 架构决策讨论 → `__wiki__/decisions/{NNN}-$ARGUMENTS.md`（自动分配编号）
    - 发现的问题或风险 → `__wiki__/issues/$ARGUMENTS.md`
-4. 按对应模板创建页面：
+4. 按 `SCHEMA.md` 中对应类别的模板创建页面，**严格使用该类别的完整 frontmatter**：
+   - queries → 必须有 `question`, `date`, `related_repos`, `source`
+   - concepts → 必须有 `related_repos`, `tags`, `date`
+   - decisions → 必须有 `status`, `date`, `related_repos`，编号自动递增
+   - issues → 必须有 `severity`, `status`, `related_repos`, `date`
    - 提炼核心洞察，不是复制聊天记录
    - 添加 `[[wikilink]]` 链接到相关已有页面
-   - 添加 frontmatter：date, related_repos, tags
 5. 反向更新：在被引用的已有页面中补充对新页面的链接
 6. 更新 `__wiki__/index.md`
 7. 在 `__wiki__/log.md` 顶部追加（注意：最新记录在最前）：

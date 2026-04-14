@@ -66,6 +66,7 @@ repo: {repo-name}
 module: {module-name}
 type: service | library | CLI | worker | config
 last_synced: {YYYY-MM-DD}
+last_synced_commit: {git short sha}
 ---
 ```
 
@@ -78,6 +79,7 @@ last_synced: {YYYY-MM-DD}
 between: [repo-a, repo-b]
 protocol: gRPC | REST | event | shared-db | file
 last_synced: {YYYY-MM-DD}
+last_synced_commit: {各端 repo 的 git short sha}
 ---
 ```
 

@@ -24,12 +24,14 @@ In any multi-repo workspace:
 
 ```
 /lcw-init                    # create __wiki__/ structure
-/lcw-ingest repo-alpha       # full scan of a repo
-/lcw-ingest-all              # scan all repos at once
-/lcw-diff repo-alpha         # sync recent changes
+/lcw-ingest repo-alpha       # full scan of a single repo
+/lcw-ingest                  # smart sync all repos (ingest / diff / lint per repo)
+/lcw-diff repo-alpha         # sync recent changes for one repo
+/lcw-diff                    # sync all repos with new commits
 /lcw-query how does auth work across repos?
 /lcw-file auth-flow-analysis # save a good answer to the wiki
-/lcw-lint                    # health check
+/lcw-lint repo-alpha         # health check for one repo
+/lcw-lint                    # health check for entire wiki
 ```
 
 ## How it works
@@ -58,14 +60,15 @@ It cross-validates both, flags contradictions, and weaves them into wiki pages l
 
 ## Commands
 
+All commands follow a unified pattern: **with a repo name, process that repo; without, process all**.
+
 | Command | What it does |
 |---------|-------------|
 | `/lcw-init` | Create `__wiki__/` directory and template files, scan workspace for repos |
-| `/lcw-ingest <repo>` | Full scan: code structure, docs, cross-validation, write wiki pages |
-| `/lcw-ingest-all` | Batch ingest all repos with execution plan and progress tracking |
-| `/lcw-diff <repo>` | Incremental sync based on git history since last sync |
-| `/lcw-query <question>` | Search wiki, synthesize answer, trace back to source code if needed |
-| `/lcw-lint` | Check for stale pages, broken links, code-doc drift, coverage gaps |
+| `/lcw-ingest [repo]` | Full scan of one repo, or smart batch sync all repos (ingest / diff / lint per repo) |
+| `/lcw-diff [repo]` | Incremental sync of one repo, or all repos with new commits |
+| `/lcw-lint [repo]` | Health check for one repo, or entire wiki |
+| `/lcw-query <question>` | Search wiki, synthesize answer, validate against source code |
 | `/lcw-file <name>` | Distill a conversation into a wiki page (analysis, decision, issue) |
 
 ## File structure

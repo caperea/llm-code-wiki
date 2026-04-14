@@ -5,7 +5,7 @@ agent: "wiki"
 
 对 wiki 执行健康检查。
 
-**范围**：无参数时检查整个 `__wiki__/`；传入 repo 名（如 `/lcw-lint alpha`）时只检查该 repo 相关的页面（`repos/alpha.md`、`modules/alpha--*.md`、引用了该 repo 的 interfaces/issues/concepts，以及 glossary 中该 repo 的条目）。局部 lint 更快，适合 ingest-all 对无新提交的 repo 做轻量校验。
+**范围**：传入 repo 名（如 `/lcw-lint alpha`）时只检查该 repo 相关的页面（`repos/alpha.md`、`modules/alpha--*.md`、引用了该 repo 的 interfaces/issues/concepts，以及 glossary 中该 repo 的条目）；无参数时检查整个 `__wiki__/`。
 
 ## 检查项
 

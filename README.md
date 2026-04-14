@@ -7,7 +7,7 @@ Based on the [LLM Wiki](llm-wiki.md) pattern by Andrej Karpathy.
 ## Install
 
 ```bash
-git clone https://github.com/user/lcw.git ~/.lcw && cd ~/.lcw && ./setup
+git clone https://github.com/caperea/llm-code-wiki.git ~/.lcw && cd ~/.lcw && ./setup
 ```
 
 `setup` auto-detects your tool (Claude Code, Codex, or OpenCode) and symlinks the commands. To specify manually:

@@ -19,10 +19,11 @@ agent: "wiki"
 7. 如果变更涉及接口变动（新增/修改 API、proto、路由），更新 `__wiki__/interfaces/` 页面
 8. 如果变更包含架构级决策（新依赖、重大重构），创建 `__wiki__/decisions/` 页面
 9. 如果发现新问题，创建 `__wiki__/issues/` 页面
-10. 更新所有受影响页面的 `last_synced` 和 `last_synced_commit`（当前 HEAD 的 short sha）
-11. 如果变更影响了 repo 间的协作关系，更新 `__wiki__/overview.md`
-12. 更新 `__wiki__/index.md`
-13. 在 `__wiki__/log.md` 顶部追加记录（注意：最新记录在最前）：
+10. 检查变更是否涉及业务词汇变动（类型重命名、新增领域概念、注释中术语变化），如有则更新 `__wiki__/glossary.md`
+11. 更新所有受影响页面的 `last_synced` 和 `last_synced_commit`（当前 HEAD 的 short sha）
+12. 如果变更影响了 repo 间的协作关系，更新 `__wiki__/overview.md`
+13. 更新 `__wiki__/index.md`
+14. 在 `__wiki__/log.md` 顶部追加记录（注意：最新记录在最前）：
 
 ```
 ## [YYYY-MM-DDTHH:MM] diff | {repo名}

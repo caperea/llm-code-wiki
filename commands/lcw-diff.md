@@ -19,7 +19,7 @@ agent: "wiki"
 - 接口变动（新增/修改 API、proto、路由）→ 更新 `interfaces/`
 - 架构级决策（新依赖、重大重构）→ 创建 `decisions/`
 - 新问题 → 创建 `issues/`
-- 业务词汇变动（类型重命名、新概念、注释中术语变化）→ 更新 `glossary.md`
+- 业务词汇变动（类型重命名、新概念、注释中术语变化）→ 更新 `glossary.md`，变更后按 SCHEMA.md 写作约定第 6 条执行级联更新
 - repo 间协作关系变化 → 更新 `overview.md`
 
 更新所有受影响页面的 `last_synced` 和 `last_synced_commit`。

@@ -43,7 +43,9 @@ agent: "wiki"
 - `interfaces/`（跨 repo 接口，如发现）
 - `concepts/`（设计模式或约定，如发现）
 - `issues/`（问题或矛盾，如发现）
-- 更新 `overview.md` 和 `glossary.md`
+- 更新 `overview.md`
+
+**词汇表更新**：将代码通道提取的业务词汇写入 `glossary.md`。对每个术语：如果已有条目，补充本 repo 的用法和引用页面；如果是新术语，新增条目。如果发现本 repo 用法与已有规范术语不一致，标记状态为"不一致"。词汇表变更后，按 SCHEMA.md 写作约定第 6 条执行级联更新。
 
 log.md 记录格式：
 ```

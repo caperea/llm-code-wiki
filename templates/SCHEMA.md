@@ -47,7 +47,7 @@ __wiki__/
 
 ### glossary.md
 
-业务词汇对照表。记录代码中出现的领域术语，跨 repo 对照。由 `/lcw-ingest` 追加条目，`/lcw-ingest-all` 整合对照，`/lcw-lint` 检查一致性。
+业务词汇对照表。记录代码中出现的领域术语，跨 repo 对照。所有写入命令都会维护词汇表：`/lcw-ingest` 提取并追加条目，`/lcw-diff` 同步术语变动，`/lcw-ingest-all` 跨 repo 整合对照，`/lcw-query` 校验时修正术语漂移，`/lcw-lint` 检查一致性并自动修正，`/lcw-file` 归档时检查新术语。
 
 每个词条包含：规范术语、定义、各 repo 中的变体（变量名/类名/表名/proto 字段名）、状态（统一/不一致/待定）。
 

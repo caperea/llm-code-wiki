@@ -29,20 +29,21 @@ __wiki__/
 
 ## 创建核心文件
 
-3. 创建 `__wiki__/SCHEMA.md` — 从项目配置中的模板写入（如已存在则跳过）
-4. 创建 `__wiki__/index.md` — 空目录模板，按类别组织
-5. 创建 `__wiki__/log.md` — 操作日志模板
-6. 创建 `__wiki__/overview.md` — 全局架构概览占位页
+3. 读取 `~/.lcw/templates/` 下的模板文件，复制到 `__wiki__/`（如已存在则跳过）：
+   - `SCHEMA.md` — wiki 结构约定和页面模板
+   - `index.md` — 内容目录
+   - `log.md` — 操作日志
+   - `overview.md` — 全局架构概览
 
 ## 扫描工作区
 
-7. 列出当前工作区中的所有子目录
-8. 识别哪些是代码仓库（包含 `.git/` 或有代码文件）
-9. 生成一份 repo 清单，写入 `__wiki__/overview.md` 的 repo 职责表格（标记为"待摄入"）
+4. 列出当前工作区中的所有子目录
+5. 识别哪些是代码仓库（包含 `.git/` 或有代码文件）
+6. 生成一份 repo 清单，写入 `__wiki__/overview.md` 的 repo 职责表格（标记为"待摄入"）
 
 ## 收尾
 
-10. 在 `__wiki__/log.md` 顶部写入初始化记录：
+7. 在 `__wiki__/log.md` 顶部写入初始化记录：
 
 ```
 ## [YYYY-MM-DDTHH:MM] init | wiki 初始化
@@ -51,12 +52,13 @@ __wiki__/
 - 下一步: 对每个 repo 执行 /lcw-ingest
 ```
 
-11. 向用户输出使用指引：
+8. 向用户输出使用指引：
 
 ```
 Wiki 已初始化。建议的下一步：
 
 1. /lcw-ingest <repo-name>   — 逐个摄入你的代码仓库
-2. /lcw-query <问题>          — 查询已摄入的知识
-3. /lcw-lint                  — 定期检查 wiki 健康状态
+2. /lcw-ingest-all            — 或一次性摄入所有仓库
+3. /lcw-query <问题>          — 查询已摄入的知识
+4. /lcw-lint                  — 定期检查 wiki 健康状态
 ```

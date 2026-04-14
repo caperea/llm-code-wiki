@@ -29,6 +29,6 @@ agent: "wiki"
 ```
 Wiki 已初始化。下一步：
 
-  /lcw-ingest <repo>    逐个摄入
-  /lcw-ingest-all       一次性摄入所有仓库
+  /lcw-ingest <repo>    摄入单个仓库
+  /lcw-ingest           摄入所有仓库
 ```

@@ -35,7 +35,12 @@ agent: "wiki"
 - 列出所有 repo 的主要模块
 - 标记在 wiki 中没有对应页面的模块
 
-### 7. Schema 版本检查
+### 7. 业务词汇一致性
+- 读取 `glossary.md`，检查标记为"不一致"的条目
+- 抽查代码中是否有新引入的术语未收录到词汇表
+- 检查是否有已统一的术语在新代码中又出现了旧别名
+
+### 8. Schema 版本检查
 - 读取 `SCHEMA.md` 的 `schema_version`
 - 检查是否有页面缺少新版本要求的字段（如 `last_synced_commit`、queries 的 `source`）
 - 报告需要迁移的页面

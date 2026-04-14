@@ -2,7 +2,7 @@
 
 LLM-maintained knowledge base for multi-repo codebases. The LLM reads your code (read-only), builds and maintains a structured wiki of markdown files, and keeps it current as your code evolves.
 
-Based on the [LLM Wiki](llm-wiki.md) pattern by Tobi Lütke.
+Based on the [LLM Wiki](llm-wiki.md) pattern by Andrej Karpathy.
 
 ## Install
 

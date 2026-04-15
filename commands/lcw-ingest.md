@@ -64,6 +64,8 @@ agent: "wiki"
 - 识别消息生产者和消费者（Kafka/RabbitMQ/SQS/RocketMQ 的 topic、handler、listener）
 - 检测事件 payload "肥胖度"（15+ 字段 → 上游把整个模型推给下游，过度耦合）
 - 追踪 topic 扇出（一个事件被多个消费者订阅 = 隐性契约，该事件是关键领域事件）
+- 提取领域事件清单：从事件类定义、消息 payload 类、EventHandler 注解中收集事件名称和含义（过去时态：OrderCreated, PaymentCompleted）
+- 提取命令清单：从 Controller 方法、Command 类/Handler、API 路由中收集命令名称（祈使句：CreateOrder, ProcessPayment）
 
 跨切面关注点扫描：
 - 鉴权/授权模式：中间件、装饰器、注解（统一 or 各模块自行实现？）
@@ -88,17 +90,26 @@ agent: "wiki"
    - 单向调用链、上游不关心下游 → Customer-Supplier
    - 下游完全复制上游数据结构 → Conformist
 4. 标注推断置信度（high/medium/low）——领域边界推断是主观判断，不确定时如实标注
+5. **追踪核心业务流程**：
+   - 从 Controller/Handler 的入口方法出发，沿调用链追踪跨模块/跨领域的完整操作路径
+   - 优先追踪：调用链最长的、跨领域最多的、代码注释/文档中反复提及的流程
+   - 对每个流程，提取：角色（从 auth 注解/middleware/API 注释推断）、命令序列、领域事件（从消息发送/事件发布代码提取）、业务规则（条件判断、策略模式）
+   - 标注外部系统调用（第三方支付、短信网关、地图服务等）
+   - 识别热点问题：流程中的异常处理密集区、TODO/HACK 注释、复杂条件分支
+   - 单 repo 模式下只能看到 repo 内部的局部流程，标注 `[跨 repo 部分待补充]`
+6. **提取参与者/角色**：从 auth 中间件、角色枚举、权限检查、API 注释、定时任务配置中识别系统的所有参与者类型（用户角色/系统角色/外部系统/定时任务）
 
 ### 写入阶段（修改 wiki）
 
 按 SCHEMA.md 的模板创建页面：
-- `domains/{name}.md`（每个推断出的业务领域，含实体、状态机、领域关系）
+- `flows/{name}.md`（每个识别出的核心业务流程，含步骤时间线、角色、事件、业务规则）
+- `domains/{name}.md`（每个推断出的业务领域，含实体、状态机、领域事件、命令、领域关系）
 - `repos/{name}.md`（仓库主页，frontmatter 含 `last_synced_commit`）
 - `modules/{name}--{module}.md`（每个主要模块，frontmatter 含 `domain` 和 `model_style`）
 - `interfaces/`（跨 repo 接口，frontmatter 含 `relationship` 和 `data_consistency`）
 - `concepts/`（设计模式或约定，如发现）
 - `issues/`（问题或矛盾，frontmatter 含 `impact_scope`/`fix_effort`/`risk_type`）
-- 更新 `overview.md`（含业务能力地图、领域关系图、跨切面关注点）
+- 更新 `overview.md`（含业务能力地图、领域关系图、参与者与角色、核心业务流程、跨切面关注点）
 
 **词汇表更新**：将代码通道提取的业务词汇写入 `glossary.md`。对每个术语：如果已有条目，补充本 repo 的用法、领域上下文和引用页面；如果是新术语，新增条目并标注领域上下文。如果发现本 repo 用法与已有规范术语不一致，标记状态为"不一致"。如果发现同一术语在不同领域含义不同（如"订单"在交易领域和结算领域含义不同），标记状态为"多义"并在"多义术语"章节记录差异和风险。词汇表变更后，按 SCHEMA.md 写作约定第 6 条执行级联更新。
 
@@ -148,7 +159,8 @@ log.md 记录：
 
 所有 repo 处理完成后——这是批量模式最有价值的一步，单 repo 模式看不到 repo 之间的关系：
 
-- 整理 `domains/`：跨 repo 审视领域边界是否合理（一个领域可能横跨多个 repo），调整 domain 分类（core/supporting/generic），补充领域间关系
+- 整理 `flows/`：跨 repo 补全流程中 `[跨 repo 部分待补充]` 的步骤，串联各 repo 的局部流程为端到端全景。这是批量模式独有的价值——单 repo 只能看到局部，批量才能看到全链路
+- 整理 `domains/`：跨 repo 审视领域边界是否合理（一个领域可能横跨多个 repo），调整 domain 分类（core/supporting/generic），补充领域间关系，确保领域事件和命令章节完整
 - 整理 `overview.md`：业务能力地图、领域关系图、系统全景、repo 职责、跨 repo 数据流（标注一致性机制）、依赖图、跨切面关注点（比较各 repo 的鉴权/日志/错误处理一致程度）
 - 整理 `interfaces/`：确保接口两端互相链接，补充 relationship 和 data_consistency 字段
 - 整合 `glossary.md`：跨 repo 对照术语，合并同义条目，标记不一致，识别多义术语（同一术语在不同领域含义不同），执行级联更新

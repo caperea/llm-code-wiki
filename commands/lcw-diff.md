@@ -31,6 +31,8 @@ agent: "wiki"
 - 消息/事件变更（新 topic、handler 变化、payload 字段变化）→ 更新 `interfaces/` 的 data_consistency 和 `domains/` 的状态机
 - 跨切面变更（鉴权中间件、日志配置、错误处理策略）→ 更新 `overview.md` 跨切面关注点章节
 - 数据库 Schema 变更（新迁移文件）→ 更新 `domains/` 实体列表，检查是否新增上帝表或共享表
+- 业务流程变更（新入口点、调用链变化、事件顺序变化）→ 更新 `flows/` 步骤和 `domains/` 的领域事件/命令章节
+- 角色/权限变更（新角色、权限模型变化）→ 更新 `overview.md` 参与者与角色章节
 
 更新所有受影响页面的 `last_synced` 和 `last_synced_commit`。注意"受影响页面"包括引用了该 repo 的 `domains/` 页面——领域页没有 `last_synced_commit`，但需要更新 `last_synced`。
 

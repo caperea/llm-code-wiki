@@ -15,6 +15,7 @@ __wiki__/
 ├── glossary.md         # 业务词汇对照表（跨 repo 术语统一）
 ├── index.md            # 内容目录
 ├── log.md              # 操作日志
+├── flows/              # 端到端业务流程（Event Storming 事件流）
 ├── domains/            # 业务领域页面（限界上下文）
 ├── repos/              # 仓库级页面，每个 repo 一个主页
 ├── modules/            # 模块/服务/包页面
@@ -29,6 +30,7 @@ __wiki__/
 
 | 类别 | 路径格式 | 示例 |
 |------|----------|------|
+| 流程 | `flows/{描述性名称}.md` | `flows/order-to-delivery.md` |
 | 领域 | `domains/{domain-name}.md` | `domains/ordering.md` |
 | 仓库 | `repos/{repo-name}.md` | `repos/alpha.md` |
 | 模块 | `modules/{repo}--{module}.md` | `modules/alpha--auth.md` |
@@ -41,6 +43,33 @@ __wiki__/
 双横线 `--` 分隔 repo 和模块名，因为单横线在模块名中太常见。
 
 ## 页面模板
+
+### flows/{name}.md
+
+```yaml
+---
+flow: {name}                       # e.g. "order-to-delivery", "user-registration"
+trigger: {触发场景}                 # e.g. "用户点击下单按钮"
+actors: [参与的角色]
+domains: [经过的领域]
+critical: true | false              # 是否核心业务流程
+last_synced: {YYYY-MM-DD}
+---
+```
+
+端到端业务流程——Event Storming 那面墙的 markdown 版本。一个 flow 跨越多个领域，描述从触发到完成的完整业务旅程。
+
+必含章节：
+
+- **流程概览**：一句话描述端到端旅程
+- **步骤**：按时间线排列的步骤序列，每个步骤包含：
+  - 角色（谁触发）→ 命令（做什么）→ 聚合/领域（谁处理）→ 领域事件（产出什么，过去时态）
+  - 业务规则（什么条件下执行）
+  - 外部系统（如涉及第三方）
+- **热点问题**：流程中发现的业务分歧、技术风险、知识盲区
+- **异常路径**：失败/取消/超时等非 happy path 的处理
+
+flows/ 页面引用 domains/ 中定义的领域事件和命令，但不重复定义它们。
 
 ### domains/{name}.md
 
@@ -63,6 +92,8 @@ last_synced: {YYYY-MM-DD}
 - **业务能力**：该领域提供什么业务功能（从业务视角描述，不是技术视角）
 - **核心实体与聚合**：代码中发现的实体、值对象、聚合根（包含代码路径引用）。标注"上帝表"（30+ 字段）和模型风格（rich/anemic）
 - **状态机**：核心实体的生命周期状态及转换（从枚举、常量、状态转换逻辑中提取）
+- **领域事件**：该领域产出的事件清单（过去时态，如 OrderCreated, OrderCancelled），标注事件的消费者和 topic
+- **命令**：该领域接收的命令清单（祈使句，如 CreateOrder, CancelOrder），标注命令的来源（哪个角色/系统触发）
 - **领域词汇**：该上下文特有的术语，链接到 `[[glossary]]`
 - **与其他领域的关系**：DDD 关系类型（Partnership / Customer-Supplier / Conformist / ACL / Shared Kernel / Open Host），标注上下游
 
@@ -72,7 +103,7 @@ last_synced: {YYYY-MM-DD}
 
 全局架构概览页，描述所有 repo 的协作关系。由 `/ingest` 自动维护。
 
-必含章节：业务能力地图（表格：能力/所属领域/实现 repo/状态）、领域关系图（领域间 DDD 关系类型）、系统全景、repo 职责一览（表格，含所属领域列）、数据流（标注同步/异步及一致性机制）、跨 repo 依赖图、关键接口汇总、跨切面关注点（鉴权/日志/序列化/错误处理的统一程度）
+必含章节：业务能力地图（表格：能力/所属领域/实现 repo/状态）、领域关系图（领域间 DDD 关系类型）、参与者与角色（表格：角色/类型/触发的核心流程）、核心业务流程（表格：流程/触发者/经过的领域/关键事件，详情链接到 flows/）、系统全景、repo 职责一览（表格，含所属领域列）、数据流（标注同步/异步及一致性机制）、跨 repo 依赖图、关键接口汇总、跨切面关注点（鉴权/日志/序列化/错误处理的统一程度）
 
 ### glossary.md
 

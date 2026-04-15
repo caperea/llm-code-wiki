@@ -35,6 +35,12 @@ agent: "wiki"
 - `interfaces/` 页面是否有未填写的 `relationship` 字段——建议补充 DDD 关系类型
 - 领域分类（core/supporting/generic）是否仍然合理
 
+**流程健康检查**：
+- `flows/` 页面引用的领域是否都有对应 `domains/` 页面
+- `flows/` 页面中的领域事件是否在对应 `domains/` 的"领域事件"章节中列出（双向一致性）
+- `domains/` 的"领域事件"和"命令"章节是否为空（有实体和状态机但没有事件/命令 → 可能遗漏了提取）
+- `critical: true` 的流程是否覆盖了系统的主要业务路径
+
 **跨切面一致性检查**：
 - 新代码中的鉴权模式是否与 `overview.md` 跨切面关注点章节记录的一致
 - 新消息 topic 是否已记录在 `interfaces/`

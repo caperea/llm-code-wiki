@@ -2,8 +2,9 @@
 
 > 本文件是 wiki 的结构约定。LLM 在执行任何 wiki 操作前应先读取本文件。
 
-**schema_version: 1**
+**schema_version: 2**
 > 如果版本号变更，lint 时应检查现有页面是否需要迁移。
+> v1 → v2 变更：新增 `domains/` 页面类型；`interfaces/`、`issues/`、`modules/` 增加可选字段。v1 页面在 v2 下仍然合法，lint 给出建议而非报错。
 
 ## 目录结构
 
@@ -14,6 +15,7 @@ __wiki__/
 ├── glossary.md         # 业务词汇对照表（跨 repo 术语统一）
 ├── index.md            # 内容目录
 ├── log.md              # 操作日志
+├── domains/            # 业务领域页面（限界上下文）
 ├── repos/              # 仓库级页面，每个 repo 一个主页
 ├── modules/            # 模块/服务/包页面
 ├── interfaces/         # 跨 repo 接口页面
@@ -27,6 +29,7 @@ __wiki__/
 
 | 类别 | 路径格式 | 示例 |
 |------|----------|------|
+| 领域 | `domains/{domain-name}.md` | `domains/ordering.md` |
 | 仓库 | `repos/{repo-name}.md` | `repos/alpha.md` |
 | 模块 | `modules/{repo}--{module}.md` | `modules/alpha--auth.md` |
 | 接口 | `interfaces/{描述性名称}.md` | `interfaces/alpha-beta-grpc.md` |
@@ -39,17 +42,47 @@ __wiki__/
 
 ## 页面模板
 
+### domains/{name}.md
+
+```yaml
+---
+domain: {name}                     # e.g. "ordering", "pricing", "identity"
+type: core | supporting | generic  # DDD 战略分类
+capabilities: [业务能力列表]
+repos: [实现该领域的 repo]
+modules: [属于该领域的模块]
+confidence: high | medium | low    # 边界推断置信度
+last_synced: {YYYY-MM-DD}
+---
+```
+
+注意：domains/ 页面没有 `last_synced_commit`，因为一个领域可能横跨多个 repo。领域页的时效性通过其包含的 modules/ 页面的 `last_synced_commit` 间接判断——如果任一模块过时，领域页也需要审视。
+
+必含章节：
+
+- **业务能力**：该领域提供什么业务功能（从业务视角描述，不是技术视角）
+- **核心实体与聚合**：代码中发现的实体、值对象、聚合根（包含代码路径引用）。标注"上帝表"（30+ 字段）和模型风格（rich/anemic）
+- **状态机**：核心实体的生命周期状态及转换（从枚举、常量、状态转换逻辑中提取）
+- **领域词汇**：该上下文特有的术语，链接到 `[[glossary]]`
+- **与其他领域的关系**：DDD 关系类型（Partnership / Customer-Supplier / Conformist / ACL / Shared Kernel / Open Host），标注上下游
+
+领域页跨越多个 module 甚至多个 repo，是 module 页和 repo 页之间的"业务层"视角。一个 module 属于一个 domain，但一个 domain 可以跨多个 repo。
+
 ### overview.md
 
 全局架构概览页，描述所有 repo 的协作关系。由 `/ingest` 自动维护。
 
-必含章节：系统全景、repo 职责一览（表格）、数据流、跨 repo 依赖图、关键接口汇总
+必含章节：业务能力地图（表格：能力/所属领域/实现 repo/状态）、领域关系图（领域间 DDD 关系类型）、系统全景、repo 职责一览（表格，含所属领域列）、数据流（标注同步/异步及一致性机制）、跨 repo 依赖图、关键接口汇总、跨切面关注点（鉴权/日志/序列化/错误处理的统一程度）
 
 ### glossary.md
 
 业务词汇对照表。记录代码中出现的领域术语，跨 repo 对照。所有写入命令都会维护词汇表：`/lcw-ingest` 提取并追加条目（批量模式完成后跨 repo 整合），`/lcw-diff` 同步术语变动，`/lcw-query` 校验时修正术语漂移，`/lcw-lint` 检查一致性并自动修正，`/lcw-file` 归档时检查新术语。
 
-每个词条包含：规范术语、定义、各 repo 中的变体（变量名/类名/表名/proto 字段名）、状态（统一/不一致/待定）。
+每个词条包含：规范术语、定义、领域上下文、各 repo 中的变体（变量名/类名/表名/proto 字段名）、状态（统一/不一致/待定/多义）。
+
+同一术语在不同领域含义不同时，产生多行（每个上下文一行），状态标记为"多义"。例如"订单"在交易领域指用户下单请求，在结算领域指财务凭证，这是两个不同的概念，需要分行记录。
+
+另设"多义术语"章节集中展示此类术语的领域差异和风险。每个领域一行（术语列合并阅读），支持三个及以上领域的多义情况。
 
 术语来源（按信息密度排序）：
 1. **注释**（最重要）— 文档注释中的自然语言描述往往直接包含业务含义
@@ -85,6 +118,8 @@ last_synced_commit: {git short sha}
 repo: {repo-name}
 module: {module-name}
 type: service | library | CLI | worker | config
+domain: {domain-name}           # 可选，所属业务领域
+model_style: rich | anemic | procedural | functional  # 可选，领域模型风格
 last_synced: {YYYY-MM-DD}
 last_synced_commit: {git short sha}
 ---
@@ -92,18 +127,24 @@ last_synced_commit: {git short sha}
 
 必含章节：做什么、代码结构、公共 API、内部逻辑摘要、依赖关系（上游/下游）
 
+可选章节：领域模型笔记（聚合边界、实体 vs 值对象、贫血模型警告）
+
 ### interfaces/{name}.md
 
 ```yaml
 ---
 between: [repo-a, repo-b]
 protocol: gRPC | REST | event | shared-db | file
+relationship: partnership | customer-supplier | conformist | acl | shared-kernel | open-host | none  # 可选，DDD 关系类型
+upstream: {repo}               # 可选，上游方
+downstream: {repo}             # 可选，下游方
+data_consistency: sync | async-eventual | async-saga | manual | unknown  # 可选，一致性机制
 last_synced: {YYYY-MM-DD}
 last_synced_commit: {各端 repo 的 git short sha}
 ---
 ```
 
-必含章节：连接了什么、契约、数据流、脆弱点
+必含章节：连接了什么、契约、数据流与一致性（同步/异步、数据冗余、一致性机制）、脆弱点
 
 ### concepts/{name}.md
 
@@ -136,7 +177,11 @@ superseded_by: {如适用}
 ---
 severity: low | medium | high | critical
 status: open | investigating | resolved
+impact_scope: local | service-chain | cross-domain  # 可选，影响范围
+fix_effort: local | cross-team | redesign            # 可选，修复难度
+risk_type: active-failure | degrading | latent        # 可选，风险类型
 related_repos: [涉及的 repo 列表]
+related_domains: [涉及的领域列表]                      # 可选
 date: {YYYY-MM-DD}
 resolved_date: {如适用}
 ---

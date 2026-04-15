@@ -22,13 +22,17 @@ agent: "wiki"
 ### 更新 wiki
 
 对每个受影响的模块，读取变更文件，更新对应 wiki 页面。同时关注：
-- 接口变动（新增/修改 API、proto、路由）→ 更新 `interfaces/`
+- 接口变动（新增/修改 API、proto、路由）→ 更新 `interfaces/`（含 relationship 和 data_consistency）
 - 架构级决策（新依赖、重大重构）→ 创建 `decisions/`
-- 新问题 → 创建 `issues/`
-- 业务词汇变动（类型重命名、新概念、注释中术语变化）→ 更新 `glossary.md`，变更后按 SCHEMA.md 写作约定第 6 条执行级联更新
+- 新问题 → 创建 `issues/`（含 impact_scope/fix_effort/risk_type）
+- 业务词汇变动（类型重命名、新概念、注释中术语变化）→ 更新 `glossary.md`（含领域上下文），变更后按 SCHEMA.md 写作约定第 6 条执行级联更新
 - repo 间协作关系变化 → 更新 `overview.md`
+- 领域模型变更（实体重命名、新聚合、状态枚举变化）→ 更新 `domains/` 页面的实体列表和状态机
+- 消息/事件变更（新 topic、handler 变化、payload 字段变化）→ 更新 `interfaces/` 的 data_consistency 和 `domains/` 的状态机
+- 跨切面变更（鉴权中间件、日志配置、错误处理策略）→ 更新 `overview.md` 跨切面关注点章节
+- 数据库 Schema 变更（新迁移文件）→ 更新 `domains/` 实体列表，检查是否新增上帝表或共享表
 
-更新所有受影响页面的 `last_synced` 和 `last_synced_commit`。
+更新所有受影响页面的 `last_synced` 和 `last_synced_commit`。注意"受影响页面"包括引用了该 repo 的 `domains/` 页面——领域页没有 `last_synced_commit`，但需要更新 `last_synced`。
 
 log.md 记录：
 ```
@@ -47,7 +51,7 @@ log.md 记录：
 - 无新提交 → 跳过（如需健康检查，用 `/lcw-lint`）
 - `repos/*.md` 不存在对应 repo 目录 → 警告（repo 可能被删除或移动）
 
-按上述逻辑逐 repo 执行。每个 repo 在独立 subagent 中处理以隔离上下文。完成后整理跨 repo 共享资源（`overview.md`、`interfaces/`、`glossary.md`）。
+按上述逻辑逐 repo 执行。每个 repo 在独立 subagent 中处理以隔离上下文。完成后整理跨 repo 共享资源（`overview.md`、`interfaces/`、`glossary.md`、`domains/`——检查领域边界是否因变更需要调整）。
 
 log.md 记录：
 ```

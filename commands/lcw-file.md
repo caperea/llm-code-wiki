@@ -27,11 +27,11 @@ agent: "wiki"
 - queries → `question`, `date`, `related_repos`, `source`
 - concepts → `related_repos`, `tags`, `date`
 - decisions → `status`, `date`, `related_repos`
-- issues → `severity`, `status`, `related_repos`, `date`
+- issues → `severity`, `status`, `related_repos`, `date`，可选：`impact_scope`, `fix_effort`, `risk_type`, `related_domains`
 
 添加 `[[wikilink]]` 链接到相关已有页面。同时在被引用的已有页面中补充反向链接——单向链接等于半个链接，只有双向才能形成知识网络。
 
-**词汇检查**：如果归档内容涉及业务术语（尤其是 concepts/ 和 queries/ 类型），检查 `glossary.md` 是否已收录。未收录的新术语追加条目，已有术语确保页面用词与规范术语一致。
+**词汇检查**：如果归档内容涉及业务术语（尤其是 concepts/ 和 queries/ 类型），检查 `glossary.md` 是否已收录（含领域上下文）。未收录的新术语追加条目，已有术语确保页面用词与规范术语一致。如果术语是多义的，在页面中明确标注领域上下文。
 
 更新 `index.md`。
 

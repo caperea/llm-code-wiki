@@ -39,24 +39,68 @@ agent: "wiki"
 
 为什么注释最重要：代码命名受技术约束（长度、语言习惯），注释是开发者用人类语言解释业务概念的地方。
 
+**数据库 Schema 分析**（如存在迁移文件、DDL 或 ORM 模型）：
+- 扫描迁移目录（Flyway、Liquibase、Alembic、Rails migrations 等）和 ORM 实体定义
+- 识别"上帝表"（30+ 字段）→ 聚合边界不清的信号，记入 issues/
+- 检测跨模块共享表（多个模块引用同一张表）→ 隐性耦合，记入 interfaces/
+- 提取外键关系和索引作为实体关系线索
+
+**状态机提取**：
+- 扫描 status/state 相关的枚举、常量、字段定义
+- 查找状态转换逻辑（switch/case on status、状态机框架、workflow 定义）
+- 记录核心实体生命周期（如 Order: created → paid → shipped → delivered）
+- 状态机是最浓缩的业务规则视角——实体能做什么、不能做什么都编码在里面
+
+**领域模型识别**：
+- 识别实体（有 ID 的持久化对象）与值对象（无 ID 的不可变对象）
+- 检测聚合根线索：被外部引用的顶层实体、Repository/DAO 模式的操作目标
+- 判断模型风格：rich（业务方法在实体上）vs anemic（数据容器 + Service 逻辑）vs procedural vs functional
+
 **笔记通道（提取 why）**：读取 README、ARCHITECTURE、CONTRIBUTING、CHANGELOG 等文档。提取有价值的代码注释（TODO、HACK、FIXME、架构决策注释）。查看最近 20 条 commit message 了解变更趋势。
+
+**基础设施通道（提取 how）**：
+
+消息/事件流分析（如存在消息队列配置或事件处理代码）：
+- 识别消息生产者和消费者（Kafka/RabbitMQ/SQS/RocketMQ 的 topic、handler、listener）
+- 检测事件 payload "肥胖度"（15+ 字段 → 上游把整个模型推给下游，过度耦合）
+- 追踪 topic 扇出（一个事件被多个消费者订阅 = 隐性契约，该事件是关键领域事件）
+
+跨切面关注点扫描：
+- 鉴权/授权模式：中间件、装饰器、注解（统一 or 各模块自行实现？）
+- 日志模式：结构化 vs 自由文本，traceId/correlationId 是否在服务间传递
+- 错误处理：统一错误码还是各模块自定义
 
 **交叉验证**：对比文档描述与代码实际结构。这一步至关重要——文档经常过时。标记：
 - phantom feature：文档说有但代码没有
 - undocumented：代码有但文档没说
 - stale docs：文档描述与代码行为不一致
+- boundary violation：模块 A 直接操作模块 B 的数据库表（绕过 API）→ 领域边界被破坏
+- implicit sharing：多个模块引用同一个 model/type 定义 → 潜在的共享内核
+
+**领域综合**（交叉验证之后、写入之前执行——这是从"代码文档化"到"领域知识提炼"的关键一步）：
+
+1. 基于已发现的模块、实体、词汇，**推断业务领域（限界上下文）边界**
+   - 线索：模块聚类（共享实体/词汇的模块归为一个领域）、DB Schema 分组（共享表的模块）、API 路径前缀、目录组织结构
+2. **分类领域**：core（差异化能力，通常代码最复杂）/ supporting（支撑核心但不差异化）/ generic（通用功能如认证/通知，通常第三方库使用最多）
+3. **推断领域间关系类型**：
+   - 适配器/转换器代码 → ACL（反腐败层）
+   - 共享 proto/model 包 → Shared Kernel（共享内核）
+   - 单向调用链、上游不关心下游 → Customer-Supplier
+   - 下游完全复制上游数据结构 → Conformist
+4. 标注推断置信度（high/medium/low）——领域边界推断是主观判断，不确定时如实标注
 
 ### 写入阶段（修改 wiki）
 
 按 SCHEMA.md 的模板创建页面：
+- `domains/{name}.md`（每个推断出的业务领域，含实体、状态机、领域关系）
 - `repos/{name}.md`（仓库主页，frontmatter 含 `last_synced_commit`）
-- `modules/{name}--{module}.md`（每个主要模块）
-- `interfaces/`（跨 repo 接口，如发现）
+- `modules/{name}--{module}.md`（每个主要模块，frontmatter 含 `domain` 和 `model_style`）
+- `interfaces/`（跨 repo 接口，frontmatter 含 `relationship` 和 `data_consistency`）
 - `concepts/`（设计模式或约定，如发现）
-- `issues/`（问题或矛盾，如发现）
-- 更新 `overview.md`
+- `issues/`（问题或矛盾，frontmatter 含 `impact_scope`/`fix_effort`/`risk_type`）
+- 更新 `overview.md`（含业务能力地图、领域关系图、跨切面关注点）
 
-**词汇表更新**：将代码通道提取的业务词汇写入 `glossary.md`。对每个术语：如果已有条目，补充本 repo 的用法和引用页面；如果是新术语，新增条目。如果发现本 repo 用法与已有规范术语不一致，标记状态为"不一致"。词汇表变更后，按 SCHEMA.md 写作约定第 6 条执行级联更新。
+**词汇表更新**：将代码通道提取的业务词汇写入 `glossary.md`。对每个术语：如果已有条目，补充本 repo 的用法、领域上下文和引用页面；如果是新术语，新增条目并标注领域上下文。如果发现本 repo 用法与已有规范术语不一致，标记状态为"不一致"。如果发现同一术语在不同领域含义不同（如"订单"在交易领域和结算领域含义不同），标记状态为"多义"并在"多义术语"章节记录差异和风险。词汇表变更后，按 SCHEMA.md 写作约定第 6 条执行级联更新。
 
 log.md 记录：
 ```
@@ -104,9 +148,10 @@ log.md 记录：
 
 所有 repo 处理完成后——这是批量模式最有价值的一步，单 repo 模式看不到 repo 之间的关系：
 
-- 整理 `overview.md`：系统全景、repo 职责、跨 repo 数据流、依赖图
-- 整理 `interfaces/`：确保接口两端互相链接
-- 整合 `glossary.md`：跨 repo 对照术语，合并同义条目，标记不一致，执行级联更新
+- 整理 `domains/`：跨 repo 审视领域边界是否合理（一个领域可能横跨多个 repo），调整 domain 分类（core/supporting/generic），补充领域间关系
+- 整理 `overview.md`：业务能力地图、领域关系图、系统全景、repo 职责、跨 repo 数据流（标注一致性机制）、依赖图、跨切面关注点（比较各 repo 的鉴权/日志/错误处理一致程度）
+- 整理 `interfaces/`：确保接口两端互相链接，补充 relationship 和 data_consistency 字段
+- 整合 `glossary.md`：跨 repo 对照术语，合并同义条目，标记不一致，识别多义术语（同一术语在不同领域含义不同），执行级联更新
 
 log.md 记录：
 ```

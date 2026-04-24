@@ -1,0 +1,59 @@
+{
+  "skill_name": "lcw",
+  "iteration": 1,
+  "timestamp": "2026-04-24T16:45:00Z",
+  "results": [
+    {
+      "eval_id": 1,
+      "eval_name": "ingest-coverage",
+      "status": "PASS",
+      "metrics": {
+        "total_modules": 7,
+        "modules_covered": 7,
+        "coverage_percent": 100,
+        "pages_created": 18,
+        "domains_identified": 4,
+        "flows_documented": 1
+      },
+      "timing": {
+        "duration_seconds": 2585.9,
+        "tokens": 36590
+      }
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "lint-fixes-wiki",
+      "status": "PASS",
+      "metrics": {
+        "drift_detected": true,
+        "git_diff_read": true,
+        "wiki_updated": true,
+        "last_synced_commit_updated": true
+      },
+      "timing": {
+        "duration_seconds": 899.5,
+        "tokens": 40883
+      }
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "query-updates-wiki",
+      "status": "PASS",
+      "metrics": {
+        "statuses_found": 5,
+        "verified_against_code": true,
+        "wiki_was_accurate": true
+      },
+      "timing": {
+        "duration_seconds": 75.1,
+        "tokens": 21904
+      }
+    }
+  ],
+  "summary": {
+    "total_evals": 3,
+    "passed": 3,
+    "failed": 0,
+    "pass_rate": "100%"
+  }
+}

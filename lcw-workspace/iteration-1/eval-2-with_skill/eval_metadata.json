@@ -1,0 +1,18 @@
+{
+  "eval_id": 2,
+  "eval_name": "lint-fixes-wiki",
+  "prompt": "在 /tmp/lcw-test-repo 目录下，修改 user/user.go 添加新字段和新函数，然后执行 /lcw lint，检查 wiki 是否被更新以反映代码变化",
+  "assertions": [
+    {"name": "检测到drift", "expected": "lint 报告发现代码与 wiki 不一致", "met": true},
+    {"name": "wiki被更新", "expected": "wiki 页面包含新增的字段和函数", "met": true},
+    {"name": "last_synced_commit被更新", "expected": "last_synced_commit 指向最新的 commit", "met": true}
+  ],
+  "result": {
+    "drift_detected": true,
+    "git_diff_read": true,
+    "wiki_updated": true,
+    "fields_added": ["LastLoginAt", "LoginCount"],
+    "functions_added": ["UpdateProfile", "DeleteAccount"],
+    "last_synced_commit_updated": true
+  }
+}

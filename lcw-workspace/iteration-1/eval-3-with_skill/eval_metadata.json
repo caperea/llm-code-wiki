@@ -1,0 +1,16 @@
+{
+  "eval_id": 3,
+  "eval_name": "query-updates-wiki",
+  "prompt": "在 /tmp/lcw-test-repo 目录下执行 /lcw query '订单状态有哪些？状态之间怎么转换？'",
+  "assertions": [
+    {"name": "回答包含所有状态", "expected": "回答中包含 pending, paid, shipped, delivered, cancelled 五个状态", "met": true},
+    {"name": "验证代码", "expected": "query 验证了源码", "met": true}
+  ],
+  "result": {
+    "statuses_found": ["pending", "paid", "shipped", "delivered", "cancelled"],
+    "transitions_explained": true,
+    "verified_against_code": true,
+    "wiki_was_accurate": true,
+    "wiki_update_needed": false
+  }
+}

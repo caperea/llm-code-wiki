@@ -1,0 +1,80 @@
+{
+  "skill_name": "lcw",
+  "evals": [
+    {
+      "id": 1,
+      "name": "ingest-coverage",
+      "prompt": "在 /tmp/lcw-test-repo 目录下执行 /lcw init 然后 /lcw ingest，检查是否所有模块都被摄入到 wiki 中",
+      "expected_output": "wiki 应该包含以下模块页面：user, order, payment, notification, api, internal/cache, internal/logger。所有文件夹都应该被覆盖。",
+      "files": [],
+      "assertions": [
+        {
+          "name": "user模块被摄入",
+          "check": "wiki 中存在 user 模块的页面"
+        },
+        {
+          "name": "order模块被摄入",
+          "check": "wiki 中存在 order 模块的页面"
+        },
+        {
+          "name": "payment模块被摄入",
+          "check": "wiki 中存在 payment 模块的页面"
+        },
+        {
+          "name": "notification模块被摄入",
+          "check": "wiki 中存在 notification 模块的页面"
+        },
+        {
+          "name": "api模块被摄入",
+          "check": "wiki 中存在 api 模块的页面"
+        },
+        {
+          "name": "internal/cache被摄入",
+          "check": "wiki 中存在 internal/cache 模块的页面"
+        },
+        {
+          "name": "internal/logger被摄入",
+          "check": "wiki 中存在 internal/logger 模块的页面"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "lint-fixes-wiki",
+      "prompt": "在 /tmp/lcw-test-repo 目录下，修改 user/user.go 添加新字段和新函数，然后执行 /lcw lint，检查 wiki 是否被更新以反映代码变化",
+      "expected_output": "lint 应该检测到 drift，读取 git diff，更新 wiki 页面以反映新的字段和函数",
+      "files": [],
+      "assertions": [
+        {
+          "name": "检测到drift",
+          "check": "lint 报告发现代码与 wiki 不一致"
+        },
+        {
+          "name": "wiki被更新",
+          "check": "wiki 页面包含新增的字段和函数"
+        },
+        {
+          "name": "last_synced_commit被更新",
+          "check": "last_synced_commit 指向最新的 commit"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "query-updates-wiki",
+      "prompt": "在 /tmp/lcw-test-repo 目录下执行 /lcw query '订单状态有哪些？状态之间怎么转换？'，检查是否正确回答并更新 wiki",
+      "expected_output": "query 应该从代码中提取 OrderStatus 的所有状态值，理解状态转换逻辑，回答问题并更新 wiki",
+      "files": [],
+      "assertions": [
+        {
+          "name": "回答包含所有状态",
+          "check": "回答中包含 pending, paid, shipped, delivered, cancelled 五个状态"
+        },
+        {
+          "name": "wiki被更新",
+          "check": "wiki 中记录了状态机信息"
+        }
+      ]
+    }
+  ]
+}

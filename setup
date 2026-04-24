@@ -29,26 +29,25 @@ fi
 link_commands() {
   local dest="$1"
   mkdir -p "$dest"
-  for f in "$LCW_DIR/commands"/lcw-*.md; do
-    ln -sf "$f" "$dest/$(basename "$f")"
-  done
+  # Link the single lcw.md command
+  ln -sf "$LCW_DIR/commands/lcw.md" "$dest/lcw.md"
 }
 
 for HOST in $HOSTS; do
   case "$HOST" in
     claude)
       link_commands "$HOME/.claude/commands"
-      echo "lcw ready (claude).  commands: ~/.claude/commands/lcw-*.md"
+      echo "lcw ready (claude).  command: ~/.claude/commands/lcw.md"
       ;;
     codex)
       link_commands "$HOME/.codex/commands"
-      echo "lcw ready (codex).   commands: ~/.codex/commands/lcw-*.md"
+      echo "lcw ready (codex).   command: ~/.codex/commands/lcw.md"
       ;;
     opencode)
       link_commands "$HOME/.opencode/commands"
       mkdir -p "$HOME/.opencode/agents"
       ln -sf "$LCW_DIR/agents/wiki.md" "$HOME/.opencode/agents/wiki.md"
-      echo "lcw ready (opencode). commands: ~/.opencode/commands/lcw-*.md"
+      echo "lcw ready (opencode). command: ~/.opencode/commands/lcw.md"
       ;;
     *)
       echo "Unknown host: $HOST (expected: claude, codex, opencode)" >&2
@@ -58,4 +57,4 @@ for HOST in $HOSTS; do
 done
 
 echo ""
-echo "Run /lcw-init in your project to create the wiki."
+echo "Run /lcw init in your project to create the wiki."

@@ -12,11 +12,11 @@
 ```
 命令 (commands)          触发方式             本质
 ──────────────────────────────────────────────────────
-/lcw-ingest                  /lcw-ingest repo-alpha   摄入：把 raw 变成 wiki 知识
-/lcw-diff                    /lcw-diff repo-alpha     增量：只处理最近变更
-/lcw-query                   /lcw-query 认证流程      查询：从 wiki 回答问题
-/lcw-lint                    /lcw-lint                体检：wiki 健康检查
-/lcw-file                    /lcw-file auth-deep-dive 归档：把对话内容存入 wiki
+/lcw ingest                  /lcw ingest repo-alpha   摄入：把 raw 变成 wiki 知识
+/lcw diff                    /lcw diff repo-alpha     增量：只处理最近变更
+/lcw query                   /lcw query 认证流程      查询：从 wiki 回答问题
+/lcw lint                    /lcw lint                体检：wiki 健康检查
+/lcw file                    /lcw file auth-deep-dive 归档：把对话内容存入 wiki
 ```
 
 为什么是这 5 个？
@@ -36,11 +36,11 @@ workspace/
 │   ├── agents/
 │   │   └── wiki.md            # wiki 维护专用 subagent
 │   └── commands/
-│       ├── ingest.md          # /lcw-ingest 命令
-│       ├── diff.md            # /lcw-diff 命令
-│       ├── query.md           # /lcw-query 命令
-│       ├── lint.md            # /lcw-lint 命令
-│       └── file.md            # /lcw-file 命令
+│       ├── ingest.md          # /lcw ingest 命令
+│       ├── diff.md            # /lcw diff 命令
+│       ├── query.md           # /lcw query 命令
+│       ├── lint.md            # /lcw lint 命令
+│       └── file.md            # /lcw file 命令
 ├── AGENTS.md                  # 项目级指令
 ├── opencode.json              # OpenCode 配置
 │
@@ -79,7 +79,7 @@ workspace/
 1. **只写 `__wiki__/`**：所有 repo 目录是只读输入，绝不修改任何 repo 中的文件
 2. **代码是事实**：当 wiki 描述与代码矛盾时，以代码为准，更新 wiki
 3. **笔记需验证**：README、注释、文档提供上下文，但可能过时，需与代码交叉验证
-4. **wiki 记录理解，不复制代码**：页面中不粘贴大段源码，用路径引用 `repo/path/lcw-file.go:L10-L30`
+4. **wiki 记录理解，不复制代码**：页面中不粘贴大段源码，用路径引用 `repo/path/lcw file.go:L10-L30`
 5. **每次写操作后更新 `index.md` 和 `log.md`**
 
 ## 项目结构
@@ -91,11 +91,11 @@ workspace/
 ## Wiki 操作
 
 使用自定义命令操作 wiki：
-- `/lcw-ingest <repo>` — 首次全量摄入一个仓库
-- `/lcw-diff <repo>` — 增量同步最近变更
-- `/lcw-query <问题>` — 查询 wiki
-- `/lcw-lint` — wiki 健康检查
-- `/lcw-file <名称>` — 把当前对话内容归档到 wiki
+- `/lcw ingest <repo>` — 首次全量摄入一个仓库
+- `/lcw diff <repo>` — 增量同步最近变更
+- `/lcw query <问题>` — 查询 wiki
+- `/lcw lint` — wiki 健康检查
+- `/lcw file <名称>` — 把当前对话内容归档到 wiki
 
 ## 代码 vs 笔记
 
@@ -126,7 +126,7 @@ workspace/
 
 ```markdown
 ---
-description: "Wiki 维护专用 agent，处理 ingest/lcw-diff/lcw-lint/lcw-file 等写操作"
+description: "Wiki 维护专用 agent，处理 ingest/lcw diff/lcw lint/lcw file 等写操作"
 mode: "subagent"
 ---
 
@@ -154,7 +154,7 @@ mode: "subagent"
 
 ---
 
-## .opencode/commands/lcw-ingest.md
+## .opencode/commands/lcw ingest.md
 
 ```markdown
 ---
@@ -212,14 +212,14 @@ agent: "wiki"
 
 ## 注意
 
-- 页面中不粘贴大段代码，用路径引用：`见 repo/path/lcw-file:L行号`
+- 页面中不粘贴大段代码，用路径引用：`见 repo/path/lcw file:L行号`
 - 使用 `[[wikilink]]` 链接相关页面
 - 遵循 SCHEMA.md 中的页面模板格式
 ```
 
 ---
 
-## .opencode/commands/lcw-diff.md
+## .opencode/commands/lcw diff.md
 
 ```markdown
 ---
@@ -247,12 +247,12 @@ agent: "wiki"
 ## 注意
 
 - 增量同步关注"什么变了"，不需要重新理解整个 repo
-- 如果变更范围太大（如大规模重构），建议改用 `/lcw-ingest` 全量重建
+- 如果变更范围太大（如大规模重构），建议改用 `/lcw ingest` 全量重建
 ```
 
 ---
 
-## .opencode/commands/lcw-query.md
+## .opencode/commands/lcw query.md
 
 ```markdown
 ---
@@ -271,7 +271,7 @@ description: "查询 wiki 知识库"
    - 在回答中标注哪些信息来自 wiki、哪些来自直接读码
 5. 综合生成回答，引用具体的 wiki 页面 `[[page]]`
 6. 评估：这个回答是否有长期复用价值？
-   - 如果是（跨模块分析、架构洞察、流程梳理）→ 建议用户 `/lcw-file` 归档
+   - 如果是（跨模块分析、架构洞察、流程梳理）→ 建议用户 `/lcw file` 归档
    - 如果否（简单事实查询）→ 直接结束
 
 ## 回答风格
@@ -283,7 +283,7 @@ description: "查询 wiki 知识库"
 
 ---
 
-## .opencode/commands/lcw-lint.md
+## .opencode/commands/lcw lint.md
 
 ```markdown
 ---
@@ -328,7 +328,7 @@ agent: "wiki"
 生成健康报告，包含：
 - 总页面数、stale 数、orphan 数
 - 需要更新的页面清单（按优先级）
-- 建议的下一步操作（哪些 repo 需要 `/lcw-diff`）
+- 建议的下一步操作（哪些 repo 需要 `/lcw diff`）
 - 健康评分（0-10）
 
 将报告追加到 `__wiki__/log.md`，格式：
@@ -337,7 +337,7 @@ agent: "wiki"
 
 ---
 
-## .opencode/commands/lcw-file.md
+## .opencode/commands/lcw file.md
 
 ```markdown
 ---
@@ -383,7 +383,7 @@ agent: "wiki"
                            │
               ┌────────────┼────────────┐
               │            │            │
-         /lcw-ingest        /lcw-diff       (直接读)
+         /lcw ingest        /lcw diff       (直接读)
         (全量首次)    (增量同步)        │
               │            │            │
               ▼            ▼            │
@@ -391,7 +391,7 @@ agent: "wiki"
         │       __wiki__/         │    │
         │                         │    │
         │  repos/  modules/       │    │
-        │  interfaces/ concepts/  │◄───┘ /lcw-query 必要时回溯源码
+        │  interfaces/ concepts/  │◄───┘ /lcw query 必要时回溯源码
         │  decisions/ issues/     │
         │  queries/               │
         │                         │
@@ -400,7 +400,7 @@ agent: "wiki"
                  │
           ┌──────┼──────┐
           │      │      │
-       /lcw-query  /lcw-lint  /lcw-file
+       /lcw query  /lcw lint  /lcw file
        (读取)  (体检) (回填)
           │      │      │
           ▼      ▼      ▼
@@ -412,21 +412,21 @@ agent: "wiki"
 
 ```bash
 # 第一天：初始化
-/lcw-ingest repo-alpha
-/lcw-ingest repo-beta
-/lcw-ingest repo-gamma
+/lcw ingest repo-alpha
+/lcw ingest repo-beta
+/lcw ingest repo-gamma
 
 # 日常：探索和查询
-/lcw-query 用户从登录到下单的完整调用链是什么？
+/lcw query 用户从登录到下单的完整调用链是什么？
 # → 觉得回答很好 →
-/lcw-file login-to-order-flow
+/lcw file login-to-order-flow
 
 # 有新代码合入后
-/lcw-diff repo-alpha
+/lcw diff repo-alpha
 
 # 每周一次
-/lcw-lint
+/lcw lint
 
 # 讨论中发现了架构问题
-/lcw-file 003-cache-inconsistency
+/lcw file 003-cache-inconsistency
 ```

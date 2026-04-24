@@ -23,15 +23,15 @@ Update: `cd ~/.lcw && git pull` — symlinks pick up changes automatically.
 In any multi-repo workspace:
 
 ```
-/lcw-init                    # create __wiki__/ structure
-/lcw-ingest repo-alpha       # full scan of a single repo
-/lcw-ingest                  # smart sync all repos (ingest / diff / lint per repo)
-/lcw-diff repo-alpha         # sync recent changes for one repo
-/lcw-diff                    # sync all repos with new commits
-/lcw-query how does auth work across repos?
-/lcw-file auth-flow-analysis # save a good answer to the wiki
-/lcw-lint repo-alpha         # health check for one repo
-/lcw-lint                    # health check for entire wiki
+/lcw init                    # create __wiki__/ structure
+/lcw ingest repo-alpha       # full scan of a single repo
+/lcw ingest                  # smart sync all repos (ingest / diff / lint per repo)
+/lcw diff repo-alpha         # sync recent changes for one repo
+/lcw diff                    # sync all repos with new commits
+/lcw query how does auth work across repos?
+/lcw file auth-flow-analysis # save a good answer to the wiki
+/lcw lint repo-alpha         # health check for one repo
+/lcw lint                    # health check for entire wiki
 ```
 
 ## How it works
@@ -60,16 +60,16 @@ It cross-validates both, flags contradictions, and weaves them into wiki pages l
 
 ## Commands
 
-All commands follow a unified pattern: **with a repo name, process that repo; without, process all**.
+All commands follow a unified pattern: `/lcw <action> [repo]` — with a repo name, process that repo; without, process all.
 
 | Command | What it does |
 |---------|-------------|
-| `/lcw-init` | Create `__wiki__/` directory and template files, scan workspace for repos |
-| `/lcw-ingest [repo]` | Full scan of one repo, or smart batch sync all repos (ingest / diff / lint per repo) |
-| `/lcw-diff [repo]` | Incremental sync of one repo, or all repos with new commits |
-| `/lcw-lint [repo]` | Health check for one repo, or entire wiki |
-| `/lcw-query <question>` | Search wiki, synthesize answer, validate against source code |
-| `/lcw-file <name>` | Distill a conversation into a wiki page (analysis, decision, issue) |
+| `/lcw init` | Create `__wiki__/` directory and template files, scan workspace for repos |
+| `/lcw ingest [repo]` | Full scan of one repo, or smart batch sync all repos (ingest / diff / lint per repo) |
+| `/lcw diff [repo]` | Incremental sync of one repo, or all repos with new commits |
+| `/lcw lint [repo]` | Health check for one repo, or entire wiki |
+| `/lcw query <question>` | Search wiki, synthesize answer, validate against source code |
+| `/lcw file <name>` | Distill a conversation into a wiki page (analysis, decision, issue) |
 
 ## File structure
 
@@ -78,7 +78,7 @@ All commands follow a unified pattern: **with a repo name, process that repo; wi
 ├── setup                # one-time install
 ├── commands/            # slash command definitions (symlinked to tool)
 ├── agents/              # wiki editor agent (OpenCode)
-└── templates/           # __wiki__/ scaffolding for /lcw-init
+└── templates/           # __wiki__/ scaffolding for /lcw init
 
 your-workspace/
 ├── repo-alpha/          # code repo (read-only)

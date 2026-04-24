@@ -1,0 +1,22 @@
+{
+  "eval_id": 1,
+  "eval_name": "ingest-coverage",
+  "prompt": "在 /tmp/lcw-test-repo 目录下执行 /lcw init 然后 /lcw ingest，检查是否所有模块都被摄入到 wiki 中",
+  "assertions": [
+    {"name": "user模块被摄入", "expected": "wiki 中存在 user 模块的页面"},
+    {"name": "order模块被摄入", "expected": "wiki 中存在 order 模块的页面"},
+    {"name": "payment模块被摄入", "expected": "wiki 中存在 payment 模块的页面"},
+    {"name": "notification模块被摄入", "expected": "wiki 中存在 notification 模块的页面"},
+    {"name": "api模块被摄入", "expected": "wiki 中存在 api 模块的页面"},
+    {"name": "internal/cache被摄入", "expected": "wiki 中存在 internal/cache 模块的页面"},
+    {"name": "internal/logger被摄入", "expected": "wiki 中存在 internal/logger 模块的页面"}
+  ],
+  "result": {
+    "total_modules": 7,
+    "modules_covered": 7,
+    "coverage_percent": 100,
+    "pages_created": 18,
+    "domains_identified": 4,
+    "flows_documented": 1
+  }
+}

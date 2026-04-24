@@ -21,7 +21,11 @@ LLM-maintained knowledge base for multi-repo codebases.
 **执行模式**：
 - 默认模式：执行前展示计划，用户确认后批量执行
 - `--plan` 模式：只展示计划，不执行
-- `--batch N` 模式：分批执行，每批 N 个 repo
+- `--batch N` 模式：分批执行，每批 N 个 repo（默认 N=5）
+
+**默认值**：
+- `--batch` 默认每批 5 个 repo
+- 超过 20 个 repo 时自动启用分批模式
 
 ---
 
@@ -172,12 +176,15 @@ __wiki__/
 /lcw lint --plan      # 展示健康检查计划
 ```
 
-**`--batch N`**：分批执行，每批 N 个 repo
+**`--batch N`**：分批执行，每批 N 个 repo（默认 N=5）
 
 ```
-/lcw ingest --batch 5   # 每批 5 个 repo
-/lcw diff --batch 3     # 每批 3 个 repo
+/lcw ingest --batch     # 默认每批 5 个 repo
+/lcw ingest --batch 3   # 每批 3 个 repo
+/lcw diff --batch 10    # 每批 10 个 repo
 ```
+
+**自动分批**：当待处理 repo 超过 20 个时，自动启用分批模式（每批 5 个），用户可在确认时调整。
 
 **执行流程**：
 

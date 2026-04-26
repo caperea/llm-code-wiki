@@ -2,9 +2,10 @@
 
 > 本文件是 wiki 的结构约定。LLM 在执行任何 wiki 操作前应先读取本文件。
 
-**schema_version: 2**
+**schema_version: 3**
 > 如果版本号变更，lint 时应检查现有页面是否需要迁移。
 > v1 → v2 变更：新增 `domains/` 页面类型；`interfaces/`、`issues/`、`modules/` 增加可选字段。v1 页面在 v2 下仍然合法，lint 给出建议而非报错。
+> v2 → v3 变更：新增 `activities/` 目录与月度桶页面（按自然月切片，每 (repo, 月) 一个）。v2 页面在 v3 下仍然合法。
 
 ## 目录结构
 
@@ -23,7 +24,8 @@ __wiki__/
 ├── concepts/           # 概念/模式/约定页面
 ├── decisions/          # 架构决策记录 (ADR)
 ├── issues/             # 问题、矛盾、技术债
-└── queries/            # 有价值的查询结果
+├── queries/            # 有价值的查询结果
+└── activities/           # 提交活动月度桶（按自然月，每 (repo, 月) 一个）
 ```
 
 ## 命名约定
@@ -39,6 +41,7 @@ __wiki__/
 | 决策 | `decisions/{NNN}-{标题}.md` | `decisions/001-monorepo-split.md` |
 | 问题 | `issues/{描述性名称}.md` | `issues/stale-api-v1.md` |
 | 查询 | `queries/{描述性名称}.md` | `queries/auth-flow-analysis.md` |
+| 活动桶 | `activities/{repo}--{YYYY-MM}.md` | `activities/alpha--2026-03.md` |
 
 双横线 `--` 分隔 repo 和模块名，因为单横线在模块名中太常见。
 
@@ -282,6 +285,52 @@ source: query | discussion | investigation
 ```
 
 自由格式，是提炼后的分析，不是聊天记录的复制。
+
+### activities/{repo}--{YYYY-MM}.md
+
+```yaml
+---
+type: activity-bucket
+repo: {repo}
+month: {YYYY-MM}                          # 自然月，例如 2026-02
+month_status: closed | current            # 过去月 closed（幂等不再写），当月 current（每次 sync 刷新）
+extracted_at: {ISO 时间戳}
+commit_range: {first_short_sha}..{last_short_sha}   # 该月第一笔到最后一笔提交
+commit_count: {N}
+author_count: {N}
+files_touched: {N}
+loc_added: {N}
+loc_removed: {N}
+top_modules: [模块名, ...]                 # 改动最多的 3-5 个模块（与 modules/ 目录中的 module 字段对应）
+top_authors:                              # 最多 5 人
+  - name: {canonical_name}
+    commits: {N}
+    loc_net: {N}
+schema_version: 1
+---
+```
+
+提交活动月度桶——把一个 repo 一个自然月的所有提交升维成稳定的、可聚合的叙事 + 表格，供 `/lcw activities ask` 在任意时间窗口聚合查询。
+
+**核心原则**：
+
+- 摄入是升维：不存 commit 全文 / diff，只存路径、模块映射、作者归属、聚合指标
+- 过去月的桶幂等：一旦写入并标记 `month_status: closed`，后续 sync 跳过；只有当月 (`current`) 会被重写
+- 引用源码用路径，引用模块用 `[[wikilinks]]`
+- 作者邮箱不写入正文，只在 frontmatter 的 `top_authors` 中以 canonical_name 出现（避免泄漏）
+
+必含章节（每段叙事 ≤ 150 字）：
+
+- **本月主题**：1-2 段叙事——这个月主要在做什么？是续作之前的工作还是新方向？
+- **改动热区**：表格列出 模块 / 改动文件数 / 主要作者 / 关联 `[[modules/{repo}--{module}]]`
+- **高影响提交**：默认阈值 ≥10 文件 或 ≥500 LOC 的提交清单——short sha, subject, author, 关联模块
+- **作者贡献**：表格列出 作者 / 提交数 / LOC净 / 聚焦模块 / 与上月对比（↑↓→）
+- **风险信号**：高 churn 文件、反复回退、bugfix 集中区——可触发 `[[issues/...]]`
+- **关联 wiki**：本月触及的 `[[domains/...]]`、`[[interfaces/...]]`、`[[decisions/...]]`
+
+`activities/_index.md` 为 LLM 查找入口，列出当前已存在的桶（按 repo / 月份）以及各桶的 `extracted_at`，供 `/lcw activities ask` 快速判断窗口完整性。
+
+可选 `activities/_aliases.yaml`：作者归一化映射（`canonical / emails / github`），无该文件时按 `(name, email)` 默认聚合。
 
 ## 写作约定
 

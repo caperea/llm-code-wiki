@@ -32,6 +32,9 @@ In any multi-repo workspace:
 /lcw file auth-flow-analysis # save a good answer to the wiki
 /lcw lint repo-alpha         # health check for one repo
 /lcw lint                    # health check for entire wiki
+/lcw activities sync --months 3        # extract last 3 months of commit activity (per repo, per natural month)
+/lcw activities ask "过去 3 个月谁在做 payment？" --lens people
+/lcw activities ask "上个月主要的架构变化" --lens feature --months 1
 ```
 
 ## How it works
@@ -70,6 +73,7 @@ All commands follow a unified pattern: `/lcw <action> [repo]` — with a repo na
 | `/lcw lint [repo]` | Health check for one repo, or entire wiki |
 | `/lcw query <question>` | Search wiki, synthesize answer, validate against source code |
 | `/lcw file <name>` | Distill a conversation into a wiki page (analysis, decision, issue) |
+| `/lcw activities <action>` | Commit-activity analysis sliced by natural month. `sync` extracts per-(repo, month) buckets; `ask` aggregates across any time window with feature / people lens |
 
 ## File structure
 
@@ -94,7 +98,8 @@ your-workspace/
     ├── concepts/        # patterns, conventions, shared abstractions
     ├── decisions/       # architecture decision records
     ├── issues/          # problems, contradictions, tech debt
-    └── queries/         # saved analysis from conversations
+    ├── queries/         # saved analysis from conversations
+    └── activities/        # commit-activity buckets (one per repo per natural month)
 ```
 
 ## Supported tools

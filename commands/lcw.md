@@ -1,5 +1,5 @@
 ---
-description: "LCW — 代码仓库知识库维护系统。用 `/lcw init` 初始化，`/lcw ingest` 摄入代码，`/lcw query` 查询知识。支持单 repo 和批量操作。"
+description: "LCW — 代码仓库知识库维护系统。用 `/lcw init` 初始化，`/lcw ingest` 摄入代码，`/lcw query` 查询知识，`/lcw ddd` 反向 DDD 梳理（领域建模、限界上下文划分、子域分类、上下文映射、聚合根识别、领域事件、统一语言）。支持单 repo 和批量操作。"
 ---
 
 LLM-maintained knowledge base for multi-repo codebases.

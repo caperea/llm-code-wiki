@@ -426,11 +426,8 @@ __wiki__/ddd/
 ├── context-map.md                  # 上下文映射关系
 ├── silos.md                        # 烟囱报告
 ├── gaps.md                         # 双向校验差异报告
-├── tactical/                       # 战术层（每个上下文一组文件）
-│   ├── {context-name}.md           # 聚合根 + 实体 + 值对象 + 不变量
-│   ├── {context-name}-events.md    # 领域事件目录
-│   ├── {context-name}-acl.md       # 防腐层设计
-│   └── {context-name}-services.md  # 领域服务清单
+├── tactical/                       # 战术层（每个上下文一个文件）
+│   └── {context-name}.md           # 聚合根 + 事件 + ACL + 服务（单文件，按章节组织）
 └── evolution/                      # 演进层
     ├── roadmap.md                  # 重构路线图
     ├── transition.md               # 过渡架构
@@ -567,12 +564,15 @@ last_audit: {YYYY-MM-DD}
 type: ddd-tactical
 context: {context-name}
 aggregate_count: {N}
+event_count: {N}
+acl_count: {N}
+service_count: {N}
 created: {YYYY-MM-DD}
 last_updated: {YYYY-MM-DD}
 ---
 ```
 
-限界上下文的战术模型。
+限界上下文的完整战术模型。单文件按章节组织，一处阅读和维护。
 
 必含章节：
 
@@ -584,64 +584,19 @@ last_updated: {YYYY-MM-DD}
   - 不变量约束（该聚合必须始终满足的业务规则）
   - 代码现状（当前实现位置、model_style、与目标模型的差距）
 - **贫血检测结果**：被错放在 Service/Manager 中的实体行为清单，标注建议归属
+- **领域事件**：表格格式——事件名称（过去时态）/ 触发条件 / 生产者聚合 / 消费者 / 载荷摘要 / 持久化需求 / 当前实现方式
+- **防腐层**：每个 ACL 一个子章节：
+  - 隔离什么：哪个外部接口 / 上下文
+  - 方向：保护本上下文 / 保护外部 / 双向
+  - 转换规则：外部模型 → 本上下文模型的映射
+  - 当前状态：已有 ACL / 直接耦合 / 部分隔离
+- **领域服务**：每个服务一行或一节：
+  - 服务名称
+  - 职责：协调哪些聚合
+  - 杂物间风险：低 / 中 / 高（方法数过多、职责过杂时标高）
+  - 当前实现：代码位置
 
-### ddd/tactical/{context-name}-events.md
-
-```yaml
----
-type: ddd-events
-context: {context-name}
-event_count: {N}
-created: {YYYY-MM-DD}
-last_updated: {YYYY-MM-DD}
----
-```
-
-领域事件目录。
-
-表格格式：事件名称（过去时态）/ 触发条件 / 生产者聚合 / 消费者 / 载荷摘要 / 持久化需求 / 当前实现方式
-
-### ddd/tactical/{context-name}-acl.md
-
-```yaml
----
-type: ddd-acl
-context: {context-name}
-acl_count: {N}
-created: {YYYY-MM-DD}
-last_updated: {YYYY-MM-DD}
----
-```
-
-防腐层设计。
-
-每个 ACL 一个章节：
-
-- **隔离什么**：哪个外部接口 / 上下文
-- **方向**：保护本上下文 / 保护外部 / 双向
-- **转换规则**：外部模型 → 本上下文模型的映射
-- **当前状态**：已有 ACL / 直接耦合 / 部分隔离
-
-### ddd/tactical/{context-name}-services.md
-
-```yaml
----
-type: ddd-services
-context: {context-name}
-service_count: {N}
-created: {YYYY-MM-DD}
-last_updated: {YYYY-MM-DD}
----
-```
-
-领域服务清单。
-
-每个服务一行或一节：
-
-- **服务名称**
-- **职责**：协调哪些聚合
-- **杂物间风险**：低 / 中 / 高（方法数过多、职责过杂时标高）
-- **当前实现**：代码位置
+当某个章节特别长（如聚合根超过 5 个、事件超过 20 个）时，可拆分为独立文件（如 `{context-name}-events.md`）并在主文件中用链接引用。
 
 ### ddd/evolution/roadmap.md
 

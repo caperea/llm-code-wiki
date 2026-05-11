@@ -685,14 +685,14 @@ __wiki__/activities/
 
 **首次使用？** 直接跑 `/lcw ddd`，交互式引导会一步步走（先决判断 → 战略 → 战术 → 演进）。无需提前读文档。
 
-**执行前**：读取 `references/ddd.md`（位于 lcw 项目根目录），其中包含完整的方法论和分析步骤。读取 `__wiki__/SCHEMA.md` 中的 DDD 页面模板。
+**执行前**：读取 `references/ddd.md`（位于 lcw 项目根目录），其中包含完整的方法论、分析步骤和页面模板。不需要读取 SCHEMA.md——DDD 所需的全部信息都在 `references/ddd.md` 中。
 
 **子命令**：
 
 | 命令 | 作用 |
 |------|------|
 | `/lcw ddd` | 交互式全流程：先决判断 → 战略 → 战术 → 演进 |
-| `/lcw ddd strategic` | 战略层：子域划分、限界上下文、上下文映射、统一语言 |
+| `/lcw ddd strategic` | 战略层：子域划分、烟囱检测、限界上下文、上下文映射、统一语言 |
 | `/lcw ddd tactical <name>` | 战术层：对指定上下文做聚合根 / 事件 / ACL / 服务建模 |
 | `/lcw ddd evolution` | 演进层：重构路线图、过渡架构、迁移指南、质量基线 |
 | `/lcw ddd audit` | 漂移检测：对比代码现实与 DDD 模型的差异 |

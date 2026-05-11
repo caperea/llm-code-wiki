@@ -15,7 +15,11 @@ LLM-maintained knowledge base for multi-repo codebases.
 /lcw query <question>        # 查询知识库
 /lcw file <name>             # 归档对话洞察
 /lcw activities <action>       # 提交活动分析（按月切片，跨时间窗聚合）
-/lcw ddd [layer] [context]     # 反向 DDD 梳理（从代码考古重建领域模型）
+/lcw ddd                       # 交互式全流程（自动检测进度，从断点继续）
+/lcw ddd strategic             # 战略层：子域划分、限界上下文、上下文映射、统一语言
+/lcw ddd tactical <context>    # 战术层：指定上下文的聚合根 / 事件 / ACL / 服务建模
+/lcw ddd evolution             # 演进层：重构路线图、过渡架构、迁移指南
+/lcw ddd audit                 # 漂移检测：对比代码现实与 DDD 模型的差异
 ```
 
 **统一规则**：传入 repo 名时处理单个仓库；无参数时处理全部。

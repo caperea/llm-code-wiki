@@ -1,5 +1,5 @@
 ---
-description: "LCW — 代码仓库知识库维护系统。用 `/lcw init` 初始化，`/lcw ingest` 摄入代码，`/lcw query` 查询知识，`/lcw ddd` 反向 DDD 梳理（领域建模、限界上下文划分、子域分类、上下文映射、聚合根识别、领域事件、统一语言）。支持单 repo 和批量操作。"
+description: "LCW — 代码仓库知识库维护系统。`/lcw init` 初始化，`/lcw ingest` 摄入代码，`/lcw query` 查询知识，`/lcw ddd` 反向 DDD 梳理——从代码考古重建领域模型（子域划分、限界上下文、聚合根、领域事件、统一语言、重构路线图），适合遗留系统治理、团队对齐、架构升级规划。当用户提到领域建模、梳理架构、DDD、限界上下文、聚合根、领域事件、架构治理、烟囱合并等关键词时应触发本 skill。"
 ---
 
 LLM-maintained knowledge base for multi-repo codebases.
@@ -679,6 +679,8 @@ __wiki__/activities/
 
 反向 DDD 梳理——从代码考古出发重建领域模型。
 
+**首次使用？** 直接跑 `/lcw ddd`，交互式引导会一步步走（先决判断 → 战略 → 战术 → 演进）。无需提前读文档。
+
 **执行前**：读取 `references/ddd.md`（位于 lcw 项目根目录），其中包含完整的方法论和分析步骤。读取 `__wiki__/SCHEMA.md` 中的 DDD 页面模板。
 
 **子命令**：
@@ -693,7 +695,7 @@ __wiki__/activities/
 
 **前置条件**：wiki 中需有足够的代码事实页面。如果 `domains/`、`modules/` 为空或过少，提示用户先执行 `/lcw ingest`。
 
-**产出目录**：`__wiki__/ddd/`（含 `tactical/` 和 `evolution/` 子目录）。DDD 产出与代码事实页面分开存放——代码事实记录"是什么"，DDD 页面记录"应该是什么"。
+**产出目录**：`__wiki__/ddd/`（含 `tactical/` 和 `evolution/` 子目录）。DDD 产出与代码事实页面分开存放——代码事实记录"是什么"，DDD 页面记录"应该是什么"。每次 DDD 操作完成后更新 `ddd/status.md`（状态总览/仪表盘）。
 
 **与 wiki 的交互**（遵循三层视角模型，详见 SCHEMA.md "视角约定"）：
 - 读取 `domains/`、`modules/`、`interfaces/`、`glossary.md`、`flows/`、`activities/` 作为分析输入

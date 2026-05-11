@@ -15,6 +15,7 @@ LLM-maintained knowledge base for multi-repo codebases.
 /lcw query <question>        # 查询知识库
 /lcw file <name>             # 归档对话洞察
 /lcw activities <action>       # 提交活动分析（按月切片，跨时间窗聚合）
+/lcw ddd [layer] [context]     # 反向 DDD 梳理（从代码考古重建领域模型）
 ```
 
 **统一规则**：传入 repo 名时处理单个仓库；无参数时处理全部。
@@ -63,16 +64,19 @@ LLM-maintained knowledge base for multi-repo codebases.
 
 ## 词汇表处理
 
-所有写入命令都会维护 `glossary.md`：
+`glossary.md` 是**双视角文档**（详见 SCHEMA.md "视角约定"），同时包含现状用法（As-Is）和领域定义（To-Be）。各命令的维护分工：
 
-| 命令 | 词汇表操作 |
-|------|-----------|
-| ingest | 提取并追加条目，批量模式完成后跨 repo 整合 |
-| diff | 同步术语变动 |
-| query | 校验时修正术语漂移 |
-| lint | 检查一致性并自动修正 |
-| file | 归档时检查新术语 |
-| activities | 不修改词汇表（只读 modules 做映射） |
+| 命令 | 词汇表操作 | 维护的字段 |
+|------|-----------|-----------|
+| ingest | 提取并追加条目，批量模式完成后跨 repo 整合 | 现状用法（定义、变体、状态） |
+| diff | 同步术语变动 | 现状用法 |
+| query | 校验时修正术语漂移 | 现状用法 |
+| lint | 检查一致性并自动修正 | 现状用法 |
+| file | 归档时检查新术语 | 现状用法 |
+| activities | 不修改词汇表（只读 modules 做映射） | — |
+| ddd | 构建统一语言，补充领域定义和差距分析 | 领域定义、差距、决策、消解状态 |
+
+**互不覆盖**：ingest/diff/lint 写入时保留 DDD 字段；ddd 写入时保留现状用法字段。
 
 **术语来源优先级**（信息密度排序）：
 
@@ -111,7 +115,10 @@ __wiki__/
 ├── issues/
 ├── queries/
 ├── flows/
-└── domains/
+├── domains/
+└── ddd/           # 反向 DDD 梳理产出
+    ├── tactical/  # 战术层（每个上下文一组文件）
+    └── evolution/ # 演进层（路线图、迁移指南）
 ```
 
 **扫描工作区**：识别代码仓库（含 `.git/`），将 repo 清单写入 overview.md（标记为"待摄入"）。
@@ -405,9 +412,9 @@ __wiki__/
 **第三阶段：静态检查与修复**
 
 1. **链接完整性**：找出孤立页面和断链 → 自动修复路径
-2. **业务词汇一致性**：检查 glossary.md 与实际使用 → 自动修正
+2. **业务词汇一致性**：检查 glossary.md 的"现状用法"字段与实际使用 → 自动修正。**保留 DDD 字段**（领域定义、差距、决策、消解状态）不覆盖
 3. **Issues 回顾**：检查 open 状态的 issue，如果相关代码已变更 → 更新状态
-4. **领域健康检查**：核心实体列表、模块引用、分类合理性 → 修复不一致
+4. **领域健康检查**：核心实体列表、模块引用、分类合理性 → 修复不一致。**保留 domains/ 的 DDD 字段**（`ddd_context`/`ddd_status` + "DDD 视角"章节）不覆盖
 5. **流程健康检查**：领域事件双向一致性 → 补充缺失的事件
 
 #### 输出格式
@@ -480,7 +487,7 @@ __wiki__/
 **流程**：
 
 1. 读取 `index.md`，定位相关页面（3-8 个）
-2. 优先查阅 `domains/`（业务逻辑），再用 `modules/` 补充细节
+2. 优先查阅 `domains/`（业务逻辑），再用 `modules/` 补充细节。如果 `ddd/` 目录已有产出且与问题相关，同时查阅 DDD 页面作为补充视角——回答时区分"代码现状"和"DDD 目标模型"两个层面
 3. **验证源码**：根据 wiki 中的路径引用，读取实际代码，核对：
    - API 签名是否变化
    - 数据结构字段是否变化
@@ -526,6 +533,7 @@ __wiki__/
 | 设计模式或约定 | `concepts/` |
 | 架构决策讨论 | `decisions/{NNN}-name.md` |
 | 问题或风险 | `issues/` |
+| DDD 领域建模讨论 | `ddd/decisions.md` 或相关 `ddd/` 页面 |
 
 **写入**：
 
@@ -667,6 +675,37 @@ __wiki__/activities/
 
 ---
 
+### /lcw ddd [layer] [context]
+
+反向 DDD 梳理——从代码考古出发重建领域模型。
+
+**执行前**：读取 `references/ddd.md`（位于 lcw 项目根目录），其中包含完整的方法论和分析步骤。读取 `__wiki__/SCHEMA.md` 中的 DDD 页面模板。
+
+**子命令**：
+
+| 命令 | 作用 |
+|------|------|
+| `/lcw ddd` | 交互式全流程：先决判断 → 战略 → 战术 → 演进 |
+| `/lcw ddd strategic` | 战略层：子域划分、限界上下文、上下文映射、统一语言 |
+| `/lcw ddd tactical <name>` | 战术层：对指定上下文做聚合根 / 事件 / ACL / 服务建模 |
+| `/lcw ddd evolution` | 演进层：重构路线图、过渡架构、迁移指南、质量基线 |
+| `/lcw ddd audit` | 漂移检测：对比代码现实与 DDD 模型的差异 |
+
+**前置条件**：wiki 中需有足够的代码事实页面。如果 `domains/`、`modules/` 为空或过少，提示用户先执行 `/lcw ingest`。
+
+**产出目录**：`__wiki__/ddd/`（含 `tactical/` 和 `evolution/` 子目录）。DDD 产出与代码事实页面分开存放——代码事实记录"是什么"，DDD 页面记录"应该是什么"。
+
+**与 wiki 的交互**（遵循三层视角模型，详见 SCHEMA.md "视角约定"）：
+- 读取 `domains/`、`modules/`、`interfaces/`、`glossary.md`、`flows/`、`activities/` 作为分析输入
+- 发现的问题回写到 `issues/`
+- 统一语言直接增强 `glossary.md` 的 DDD 字段（领域定义、差距、决策、消解状态），不单独建文件
+- 在 `domains/*.md` 中更新 DDD 指向（frontmatter 的 `ddd_context`/`ddd_status` + 底部"DDD 视角"章节）
+- 不修改 `modules/`、`repos/` 的主体内容——这些由 ingest/diff/lint 维护
+
+**日志**：所有操作记录到 `log.md`，格式见 `references/ddd.md`。
+
+---
+
 ## 日志格式
 
 log.md 追加记录，倒序（最新在前）：
@@ -682,4 +721,5 @@ log.md 追加记录，倒序（最新在前）：
 
 ## 参考
 
-详细页面模板见 `templates/SCHEMA.md`（或已初始化的 `__wiki__/SCHEMA.md`）。
+- 详细页面模板见 `templates/SCHEMA.md`（或已初始化的 `__wiki__/SCHEMA.md`）
+- DDD 方法论详细指引见 `references/ddd.md`

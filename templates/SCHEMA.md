@@ -2,10 +2,49 @@
 
 > 本文件是 wiki 的结构约定。LLM 在执行任何 wiki 操作前应先读取本文件。
 
-**schema_version: 3**
+## 视角约定
+
+wiki 中的内容分为三个视角层次：
+
+```
+代码文件 → [ingest 升维] → 现状理解层 → [ddd 分析] → 目标设计层
+                                                ↘ [diff] ↙
+                                               差距层（治理清单）
+```
+
+| 层次 | 位置 | 维护者 | 含义 |
+|------|------|--------|------|
+| **现状理解** | `__wiki__/` 根目录（repos/, modules/, domains/, flows/, interfaces/, overview.md 等） | ingest / diff / lint | 代码中实际呈现的结构 |
+| **目标设计** | `__wiki__/ddd/` | ddd 命令 | 领域模型应该是什么样 |
+| **差距** | glossary.md 的"差距"列 + ddd/gaps.md | 两方共同维护 | 现状与目标的不一致 = 治理待办 |
+
+**读者指引**：
+
+- 看 `domains/risk-control.md` → 代码中实际的领域结构
+- 看 `ddd/contexts.md` → DDD 分析认为应该的上下文划分
+- 两者不一致 → 查 `ddd/gaps.md` 了解差异
+- `glossary.md` 某条目有"差距" → 这是术语治理的待办项
+- `ddd/` 目录下的所有内容都是目标态，不要与代码现状混淆
+
+**双视角文档**：
+
+- `glossary.md`：每个条目同时包含"现状用法"（ingest 维护）和"领域定义"（ddd 维护）和"差距"
+- `domains/*.md`：主体是现状，底部可选的"DDD 视角"章节指向目标层
+
+**维护规则**：
+
+- ingest / diff / lint 写入 glossary.md 时，**保留** DDD 相关字段（领域定义、差距、决策、消解状态），只更新"现状用法"
+- ingest / diff / lint 写入 domains/*.md 时，**保留**底部的"DDD 视角"章节
+- ddd 命令写入 glossary.md 时，**保留**"现状用法"，只更新 DDD 相关字段
+- ddd 命令可以写入 domains/*.md 的"DDD 视角"章节和 frontmatter 的 `ddd_context`/`ddd_status` 字段
+
+---
+
+**schema_version: 4**
 > 如果版本号变更，lint 时应检查现有页面是否需要迁移。
 > v1 → v2 变更：新增 `domains/` 页面类型；`interfaces/`、`issues/`、`modules/` 增加可选字段。v1 页面在 v2 下仍然合法，lint 给出建议而非报错。
 > v2 → v3 变更：新增 `activities/` 目录与月度桶页面（按自然月切片，每 (repo, 月) 一个）。v2 页面在 v3 下仍然合法。
+> v3 → v4 变更：新增 `ddd/` 目录与反向 DDD 梳理页面（战略层 / 战术层 / 演进层 / 漂移检测）。v3 页面在 v4 下仍然合法。
 
 ## 目录结构
 
@@ -17,7 +56,7 @@ __wiki__/
 ├── index.md            # 内容目录
 ├── log.md              # 操作日志
 ├── flows/              # 端到端业务流程（Event Storming 事件流）
-├── domains/            # 业务领域页面（限界上下文）
+├── domains/            # 业务领域页面（从代码中提取的领域结构，现状理解层）
 ├── repos/              # 仓库级页面，每个 repo 一个主页
 ├── modules/            # 模块/服务/包页面
 ├── interfaces/         # 跨 repo 接口页面
@@ -25,7 +64,10 @@ __wiki__/
 ├── decisions/          # 架构决策记录 (ADR)
 ├── issues/             # 问题、矛盾、技术债
 ├── queries/            # 有价值的查询结果
-└── activities/           # 提交活动月度桶（按自然月，每 (repo, 月) 一个）
+├── activities/           # 提交活动月度桶（按自然月，每 (repo, 月) 一个）
+└── ddd/                  # 反向 DDD 梳理产出
+    ├── tactical/         # 战术层（每个上下文一组文件）
+    └── evolution/        # 演进层（路线图、迁移指南）
 ```
 
 ## 命名约定
@@ -42,6 +84,9 @@ __wiki__/
 | 问题 | `issues/{描述性名称}.md` | `issues/stale-api-v1.md` |
 | 查询 | `queries/{描述性名称}.md` | `queries/auth-flow-analysis.md` |
 | 活动桶 | `activities/{repo}--{YYYY-MM}.md` | `activities/alpha--2026-03.md` |
+| DDD 战略 | `ddd/{产出类型}.md` | `ddd/panorama.md` |
+| DDD 战术 | `ddd/tactical/{context-name}.md` | `ddd/tactical/risk-decision.md` |
+| DDD 演进 | `ddd/evolution/{产出类型}.md` | `ddd/evolution/roadmap.md` |
 
 双横线 `--` 分隔 repo 和模块名，因为单横线在模块名中太常见。
 
@@ -129,16 +174,20 @@ flows/ 页面引用 domains/ 中定义的领域事件和命令，但不重复定
 ```yaml
 ---
 domain: {name}                     # e.g. "ordering", "pricing", "identity"
-type: core | supporting | generic  # DDD 战略分类
+type: core | supporting | generic  # 基于代码分析的领域分类（ingest 推断，DDD 分析可能重新分类）
 capabilities: [业务能力列表]
 repos: [实现该领域的 repo]
 modules: [属于该领域的模块]
 confidence: high | medium | low    # 边界推断置信度
 last_synced: {YYYY-MM-DD}
+ddd_context: {context-name}        # 可选，由 /lcw ddd 维护。指向 ddd/contexts.md 中的上下文
+ddd_status: pending | analyzed     # 可选，由 /lcw ddd 维护。DDD 分析状态
 ---
 ```
 
 注意：domains/ 页面没有 `last_synced_commit`，因为一个领域可能横跨多个 repo。领域页的时效性通过其包含的 modules/ 页面的 `last_synced_commit` 间接判断——如果任一模块过时，领域页也需要审视。
+
+`ddd_context` 和 `ddd_status` 由 `/lcw ddd` 命令维护，ingest/diff/lint 保留不覆盖。
 
 必含章节：
 
@@ -147,10 +196,16 @@ last_synced: {YYYY-MM-DD}
 - **状态机**：核心实体的生命周期状态及转换（从枚举、常量、状态转换逻辑中提取）
 - **领域事件**：该领域产出的事件清单（过去时态，如 OrderCreated, OrderCancelled），标注事件的消费者和 topic
 - **命令**：该领域接收的命令清单（祈使句，如 CreateOrder, CancelOrder），标注命令的来源（哪个角色/系统触发）
-- **领域词汇**：该上下文特有的术语，链接到 `[[glossary]]`
+- **领域词汇**：该领域特有的术语，链接到 `[[glossary]]`
 - **与其他领域的关系**：DDD 关系类型（Partnership / Customer-Supplier / Conformist / ACL / Shared Kernel / Open Host），标注上下游
 
+可选章节：
+
+- **DDD 视角**（由 `/lcw ddd` 维护，ingest/diff/lint 保留不覆盖）：该领域在 DDD 分析中的定位——所属限界上下文、分析状态、与目标模型的差异摘要。链接到 `[[ddd/contexts]]` 和 `[[ddd/tactical/{context-name}]]`。
+
 领域页跨越多个 module 甚至多个 repo，是 module 页和 repo 页之间的"业务层"视角。一个 module 属于一个 domain，但一个 domain 可以跨多个 repo。
+
+**视角定位**：domains/ 是**现状理解层**——从代码中提取的领域结构。DDD 分析可能会重新划分边界（拆分、合并、重新定义），目标态记录在 `ddd/contexts.md` 中。两者的差异汇总在 `ddd/gaps.md`。
 
 ### overview.md
 
@@ -160,9 +215,34 @@ last_synced: {YYYY-MM-DD}
 
 ### glossary.md
 
-业务词汇对照表。记录代码中出现的领域术语，跨 repo 对照。所有写入命令都会维护词汇表：`/lcw ingest` 提取并追加条目（批量模式完成后跨 repo 整合），`/lcw diff` 同步术语变动，`/lcw query` 校验时修正术语漂移，`/lcw lint` 检查一致性并自动修正，`/lcw file` 归档时检查新术语。
+业务词汇对照表——**双视角文档**，同时包含现状理解（As-Is）和目标设计（To-Be）。
 
-每个词条包含：规范术语、定义、领域上下文、各 repo 中的变体（变量名/类名/表名/proto 字段名）、状态（统一/不一致/待定/多义）。
+**维护分工**：
+- ingest / diff / lint / query / file：维护"现状用法"相关字段（规范术语、定义、各 repo 变体、状态）
+- ddd 命令：维护"领域定义"相关字段（领域定义、差距、决策、消解状态）
+- 各方写入时**保留**对方维护的字段
+
+**条目结构**（核心术语的完整结构）：
+
+```markdown
+### {术语名}
+
+**现状用法（As-Is）：**
+- 定义：{从代码中观察到的含义}
+- 领域上下文：{出现在哪些领域}
+- 各 repo 变体：{变量名/类名/表名/proto 字段名}
+- 状态：统一 / 不一致 / 待定 / 多义
+
+**领域定义（To-Be）：**（由 /lcw ddd 维护）
+- {该术语在领域模型中的精确定义}
+- {如果需要拆分为多个概念，列出每个概念的名称和定义}
+
+**差距：** {现状与领域定义之间的不一致描述}
+**决策：** {消解差距的行动方向}
+**消解状态：** 未开始 / 进行中 / 已消解
+```
+
+简单术语（无歧义、无 DDD 分析需求）可省略"领域定义"以下的字段。DDD 分析时按需补充。
 
 同一术语在不同领域含义不同时，产生多行（每个上下文一行），状态标记为"多义"。例如"订单"在交易领域指用户下单请求，在结算领域指财务凭证，这是两个不同的概念，需要分行记录。
 
@@ -331,6 +411,314 @@ schema_version: 1
 `activities/_index.md` 为 LLM 查找入口，列出当前已存在的桶（按 repo / 月份）以及各桶的 `extracted_at`，供 `/lcw activities ask` 快速判断窗口完整性。
 
 可选 `activities/_aliases.yaml`：作者归一化映射（`canonical / emails / github`），无该文件时按 `(name, email)` 默认聚合。
+
+## DDD 分析页面
+
+DDD 产出物属于**目标设计层**（To-Be），存放在 `__wiki__/ddd/` 目录下。根目录的代码事实页面属于**现状理解层**（As-Is）。两者的差异汇总在 `ddd/gaps.md` 和 `glossary.md` 的"差距"字段中。详见顶部"视角约定"。
+
+统一语言不单独设 `ddd/vocabulary.md`，而是合并到 `glossary.md`（双视角文档）。
+
+```
+__wiki__/ddd/
+├── decisions.md                    # 先决决策（架构定位、梳理范围与目标）
+├── panorama.md                     # 领域全景图（子域分类、业务能力盘点）
+├── contexts.md                     # 限界上下文定义
+├── context-map.md                  # 上下文映射关系
+├── silos.md                        # 烟囱报告
+├── gaps.md                         # 双向校验差异报告
+├── tactical/                       # 战术层（每个上下文一组文件）
+│   ├── {context-name}.md           # 聚合根 + 实体 + 值对象 + 不变量
+│   ├── {context-name}-events.md    # 领域事件目录
+│   ├── {context-name}-acl.md       # 防腐层设计
+│   └── {context-name}-services.md  # 领域服务清单
+└── evolution/                      # 演进层
+    ├── roadmap.md                  # 重构路线图
+    ├── transition.md               # 过渡架构
+    ├── migration-{context}.md      # 逐上下文迁移指南
+    └── baseline.md                 # 质量基线与回归指标
+```
+
+### ddd/decisions.md
+
+```yaml
+---
+type: ddd-decisions
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+先决决策记录。首次运行 `/lcw ddd` 时创建，后续可更新。
+
+必含章节：
+
+- **系统架构定位**：集中式平台 / 分布式框架 / 两层分离 / 不适用，附选择理由
+- **梳理范围**：纳入梳理的 repo 清单
+- **梳理目标**：理解现状 / 规划重构 / 支撑新需求 / 持续治理
+- **输出偏好**：词汇表语言、图表格式
+
+### ddd/panorama.md
+
+```yaml
+---
+type: ddd-panorama
+scope: [纳入梳理的 repo 列表]
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+领域全景图。
+
+必含章节：
+
+- **业务能力盘点**：表格列出所有业务能力（能力名 / 描述 / 暴露方式 / 所属子域 / 实现模块）
+- **子域分类**：核心域 / 支撑域 / 通用域三类，每类列出包含的能力，标注分类依据
+- **子域全景图**：ASCII art 或 Mermaid 图，展示子域之间的关系
+
+### ddd/contexts.md
+
+```yaml
+---
+type: ddd-contexts
+context_count: {N}
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+限界上下文定义。
+
+每个上下文一个章节，包含：
+
+- **职责边界**：做什么、不做什么
+- **对外契约**：暴露的接口（命令 + 查询）
+- **核心数据**：该上下文"拥有"的实体
+- **所属子域**：核心 / 支撑 / 通用
+- **实现现状**：当前由哪些 repo/module 承载（链接到 wiki 页面）
+- **边界判据**：为什么这样划分（数据边界 / 语言边界 / 团队边界 / 变更频率）
+
+### ddd/context-map.md
+
+```yaml
+---
+type: ddd-context-map
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+上下文映射关系图。
+
+必含章节：
+
+- **映射全景图**：ASCII art 或 Mermaid 图，展示所有上下文及其关系
+- **关系明细**：表格列出每对上下文关系（上游 / 下游 / 关系类型 / 集成方式 / 数据一致性 / 备注）
+- **关系类型统计**：各类型的数量分布，辅助判断系统耦合程度
+
+### 统一语言
+
+不单独设 `ddd/vocabulary.md`，统一语言直接增强 `glossary.md`（见上方 glossary.md 章节的双视角条目结构）。DDD 分析时，对核心术语补充"领域定义""差距""决策""消解状态"字段。
+
+### ddd/silos.md
+
+```yaml
+---
+type: ddd-silos
+silo_count: {N}
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+烟囱报告——"实质上做同一件事"的多个实现。
+
+每组烟囱一个章节：
+
+- **烟囱名称**：这组重复实现在做什么
+- **存在位置**：表格列出每个实现（模块 / 入口 / 实现方式）
+- **差异分析**：各实现之间的差异是"有意的业务差异"还是"无意的重复"
+- **合并建议**：统一抽象的方向、难度、阻碍因素
+
+### ddd/gaps.md
+
+```yaml
+---
+type: ddd-gaps
+gap_count: {N}
+last_audit: {YYYY-MM-DD}
+---
+```
+
+双向校验差异报告。战略层完成时首次创建，每次 `/lcw ddd audit` 时更新。
+
+每个差异一行或一节：
+
+- **差异描述**
+- **类型**：代码追上了模型（正面）/ 代码偏离了模型（关注）/ 模型需要更新（过时）
+- **严重程度**：提示 / 警告 / 阻塞
+- **相关页面**：链接到 wiki 代码事实页面和 DDD 模型页面
+- **建议行动**
+
+### ddd/tactical/{context-name}.md
+
+```yaml
+---
+type: ddd-tactical
+context: {context-name}
+aggregate_count: {N}
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+限界上下文的战术模型。
+
+必含章节：
+
+- **上下文概述**：一段话描述该上下文的核心职责（链接到 `[[ddd/contexts]]`）
+- **聚合根清单**：每个聚合根一个子章节，包含：
+  - 聚合根实体（名称、关键属性）
+  - 聚合内实体
+  - 值对象
+  - 不变量约束（该聚合必须始终满足的业务规则）
+  - 代码现状（当前实现位置、model_style、与目标模型的差距）
+- **贫血检测结果**：被错放在 Service/Manager 中的实体行为清单，标注建议归属
+
+### ddd/tactical/{context-name}-events.md
+
+```yaml
+---
+type: ddd-events
+context: {context-name}
+event_count: {N}
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+领域事件目录。
+
+表格格式：事件名称（过去时态）/ 触发条件 / 生产者聚合 / 消费者 / 载荷摘要 / 持久化需求 / 当前实现方式
+
+### ddd/tactical/{context-name}-acl.md
+
+```yaml
+---
+type: ddd-acl
+context: {context-name}
+acl_count: {N}
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+防腐层设计。
+
+每个 ACL 一个章节：
+
+- **隔离什么**：哪个外部接口 / 上下文
+- **方向**：保护本上下文 / 保护外部 / 双向
+- **转换规则**：外部模型 → 本上下文模型的映射
+- **当前状态**：已有 ACL / 直接耦合 / 部分隔离
+
+### ddd/tactical/{context-name}-services.md
+
+```yaml
+---
+type: ddd-services
+context: {context-name}
+service_count: {N}
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+领域服务清单。
+
+每个服务一行或一节：
+
+- **服务名称**
+- **职责**：协调哪些聚合
+- **杂物间风险**：低 / 中 / 高（方法数过多、职责过杂时标高）
+- **当前实现**：代码位置
+
+### ddd/evolution/roadmap.md
+
+```yaml
+---
+type: ddd-roadmap
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+重构路线图。
+
+必含章节：
+
+- **现状评估**：表格（上下文 / 烟囱程度 / 耦合度 / 模型健康度 / 变更频率 / 问题密度 / 综合优先级）
+- **优先级排序**：排序结果及依据说明
+- **路线图**：按优先级排列的重构阶段（阶段 / 目标 / 涉及上下文 / 预估工作量 / 前置依赖）
+- **风险与假设**：路线图依赖的前提条件
+
+### ddd/evolution/transition.md
+
+```yaml
+---
+type: ddd-transition
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+过渡架构描述。承认"过渡架构会存在很长时间"。
+
+每个阶段一个章节：
+
+- **架构图**：该阶段的系统架构（ASCII art 或 Mermaid）
+- **新旧共存**：哪些组件是新的、哪些是旧的、ACL 在哪里
+- **切流策略**：如何从上一阶段迁移到这个阶段
+
+### ddd/evolution/migration-{context}.md
+
+```yaml
+---
+type: ddd-migration
+context: {context-name}
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+逐上下文迁移指南。
+
+必含章节：
+
+- **目标态**：该上下文重构后的目标架构
+- **迁移步骤**：有序的步骤清单
+- **灰度方案**：流量切换策略
+- **回滚预案**：每个步骤的回滚方法
+- **验证方法**：如何确认迁移成功
+
+### ddd/evolution/baseline.md
+
+```yaml
+---
+type: ddd-baseline
+created: {YYYY-MM-DD}
+last_updated: {YYYY-MM-DD}
+---
+```
+
+质量基线与回归指标。
+
+必含章节：
+
+- **通用指标**：功能正确性、性能、可观测性覆盖
+- **业务指标**：特定于该系统领域的质量指标
+- **测量方法**：每个指标怎么测、数据从哪来
+- **红线**：哪些指标绝对不能退化
 
 ## 写作约定
 

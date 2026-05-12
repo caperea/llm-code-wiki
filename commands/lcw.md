@@ -685,7 +685,14 @@ __wiki__/activities/
 
 **首次使用？** 直接跑 `/lcw ddd`，交互式引导会一步步走（先决判断 → 战略 → 战术 → 演进）。无需提前读文档。
 
-**执行前**：读取 `references/ddd.md`（位于 lcw 项目根目录），其中包含完整的方法论、分析步骤和页面模板。不需要读取 SCHEMA.md——DDD 所需的全部信息都在 `references/ddd.md` 中。
+**执行前**：先读取 `references/ddd-core.md`（共享基础），再按子命令读取对应文件：
+- `/lcw ddd strategic` → 加读 `references/ddd-strategic.md`
+- `/lcw ddd tactical` → 加读 `references/ddd-tactical.md`
+- `/lcw ddd evolution` → 加读 `references/ddd-evolution.md`
+- `/lcw ddd audit` → 加读 `references/ddd-audit.md`
+- `/lcw ddd`（全流程）→ 先读 `ddd-strategic.md`，后续按阶段逐步加载
+
+不需要读取 SCHEMA.md——DDD 所需的全部信息都在这些参考文件中。
 
 **子命令**：
 
@@ -708,7 +715,7 @@ __wiki__/activities/
 - 在 `domains/*.md` 中更新 DDD 指向（frontmatter 的 `ddd_context`/`ddd_status` + 底部"DDD 视角"章节）
 - 不修改 `modules/`、`repos/` 的主体内容——这些由 ingest/diff/lint 维护
 
-**日志**：所有操作记录到 `log.md`，格式见 `references/ddd.md`。
+**日志**：所有操作记录到 `log.md`，格式见 `references/ddd-core.md`。
 
 ---
 
@@ -728,4 +735,4 @@ log.md 追加记录，倒序（最新在前）：
 ## 参考
 
 - 详细页面模板见 `templates/SCHEMA.md`（或已初始化的 `__wiki__/SCHEMA.md`）
-- DDD 方法论详细指引见 `references/ddd.md`
+- DDD 方法论详细指引见 `references/ddd-core.md`（共享基础）及 `ddd-strategic.md`、`ddd-tactical.md`、`ddd-evolution.md`、`ddd-audit.md`（按层加载）

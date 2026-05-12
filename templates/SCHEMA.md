@@ -435,7 +435,7 @@ __wiki__/ddd/
     └── baseline.md                 # 质量基线与回归指标
 ```
 
-**完整的 DDD 页面模板**（frontmatter + 章节约定）定义在 `references/ddd.md` 的"DDD 页面模板"章节中。DDD 命令执行时只需读取 `references/ddd.md`，不需要读取本文件。
+**完整的 DDD 页面模板**（frontmatter + 章节约定）定义在各层参考文件的"页面模板"章节中（`references/ddd-strategic.md`、`ddd-tactical.md`、`ddd-evolution.md`、`ddd-audit.md`）。DDD 命令执行时只需读取对应的参考文件，不需要读取本文件。
 
 ## 写作约定
 

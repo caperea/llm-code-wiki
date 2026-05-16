@@ -40,31 +40,23 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 ## 命令概览
 
 ```
-/lcw init                    # 初始化 wiki 结构
-/lcw plan                    # 生成执行计划
-/lcw pull [repo]             # 克隆或更新源码（管理 .sources/ 目录）
-/lcw ingest [repo]           # 全量扫描（单 repo 或批量智能同步）
-/lcw sync [repo]             # 增量同步最近变更到 wiki
-/lcw lint [repo]             # 健康检查
-/lcw query <question>        # 查询知识库
-/lcw file <name>             # 归档对话洞察
-/lcw activities <action>       # 提交活动分析（按月切片，跨时间窗聚合）
-/lcw ddd                       # 交互式全流程（自动检测进度，从断点继续）
-/lcw ddd strategic             # 战略层：子域划分、限界上下文、上下文映射、统一语言
-/lcw ddd tactical <context>    # 战术层：指定上下文的聚合根 / 事件 / ACL / 服务建模
-/lcw ddd evolution             # 演进层：重构路线图、过渡架构、迁移指南
-/lcw ddd audit                 # 漂移检测：对比代码现实与 DDD 模型的差异
+/lcw init                      # 初始化 wiki 结构
+/lcw plan                      # 生成执行计划（不执行）
+/lcw pull [repo]               # 克隆或更新源码（管理 .sources/）
+/lcw ingest [repo]             # 全量扫描代码到 wiki
+/lcw sync [repo]               # 增量同步最近变更到 wiki
+/lcw lint [repo]               # 健康检查与主动修复
+/lcw query <question>          # 查询知识库（内联，见下方）
+/lcw file <name>               # 归档对话洞察
+/lcw activities <action>       # 提交活动分析
+/lcw ddd [layer] [context]     # 反向 DDD 梳理
 ```
 
 **统一规则**：传入 repo 名时处理单个仓库；无参数时处理全部。
 
-**执行模式**：
-- 默认模式：执行前展示计划，用户确认后批量执行
-- `--plan` 模式：只展示计划，不执行
-- `--batch N` 模式：分批执行，每批 N 个 repo（默认 N=5）
-
-**默认值**：
-- `--batch` 默认每批 5 个 repo
+**批量执行**（适用于 pull/ingest/sync/lint）：
+- `--plan`：只展示计划，不执行
+- `--batch N`：分批执行，每批 N 个 repo（默认 5）
 - 超过 20 个 repo 时自动启用分批模式
 
 ---
@@ -112,19 +104,14 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 | lint | 检查一致性并自动修正 | 现状用法 |
 | file | 归档时检查新术语 | 现状用法 |
 | activities | 不修改词汇表（只读 modules 做映射） | — |
+| pull | 不修改词汇表 | — |
 | ddd | 构建统一语言，补充领域定义和差距分析 | 领域定义、差距、决策、消解状态 |
 
 **互不覆盖**：ingest/sync/lint 写入时保留 DDD 字段；ddd 写入时保留现状用法字段。
 
-**术语来源优先级**（信息密度排序）：
+**术语来源优先级**（信息密度排序）：注释 > 类型/变量名 > 数据库 schema > API/proto > 配置/枚举/常量
 
-1. 注释（最重要）— 文档注释中的自然语言描述
-2. 类型/变量名
-3. 数据库 schema
-4. API / proto 定义
-5. 配置/枚举/常量
-
-**级联更新**：当 `glossary.md` 条目变更（规范术语改名、状态从"不一致"变为"统一"），必须同步更新所有引用该术语的 wiki 页面，并在 log.md 记录。
+**级联更新**：当 `glossary.md` 条目变更时，必须同步更新所有引用该术语的 wiki 页面，并在 log.md 记录。
 
 ---
 
@@ -132,450 +119,49 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 
 ### /lcw init
 
-在当前目录初始化 wiki 项目结构。
+初始化 wiki 项目结构。创建目录骨架、SCHEMA.md、.gitignore，读取 repos.md 生成初始 repo 页面。
 
-**检查**：如果 `index.md` 已存在且包含内容，报告现有页面数量并结束。
-
-**创建骨架**：
-
-```
-./
-├── SCHEMA.md      # 页面模板（从 templates/SCHEMA.md 复制）
-├── index.md       # 分类目录
-├── log.md         # 操作日志
-├── overview.md    # 全局架构概览
-├── glossary.md    # 业务词汇对照表
-├── repos.md       # 代码仓库清单（人维护）
-├── repos/
-├── modules/
-├── interfaces/
-├── concepts/
-├── decisions/
-├── issues/
-├── queries/
-├── flows/
-├── domains/
-├── activities/
-├── ddd/           # 反向 DDD 梳理产出
-│   ├── tactical/
-│   └── evolution/
-└── .sources/      # 克隆的源码（自动加入 .gitignore）
-```
-
-**初始化 .gitignore**：确保 `.sources/` 被忽略。
-
-**读取 repos.md**：如果 `repos.md` 已存在，解析其中的仓库列表，生成初始的 `repos/` 页面（标记为"未拉取"）。如果不存在，创建空的 `repos.md` 并提示用户填写。
-
-**收尾**：在 log.md 记录初始化操作，输出下一步指引。
+**执行前**：读取 `references/init.md`。
 
 ---
 
 ### /lcw plan
 
-生成执行计划，不实际执行。
+生成执行计划（不执行）。扫描所有 repo 的状态，输出待处理矩阵（ingest/sync/lint/skip），统计信息和建议执行顺序。
 
-**目的**：在执行大规模操作前，先了解会做什么、预计耗时、资源分配。
-
-**输出**：
-
-```
-## 执行计划
-
-### 待处理 Repo
-| repo | 操作 | 原因 | 预估复杂度 |
-|------|------|------|-----------|
-| alpha | ingest | 未摄入 | 高（~500 文件） |
-| beta | sync | 3 个新提交 | 中 |
-| gamma | lint | 无变更 | 低 |
-| delta | skip | 已是最新 | - |
-
-### 统计
-- 总 repo: 36
-- 需要 ingest: 1
-- 需要 sync: 12
-- 需要 lint: 20
-- 无需处理: 3
-
-### 建议执行顺序
-1. 先处理 lint（低风险，快速）
-2. 再处理 sync（中等风险，增量更新）
-3. 最后处理 ingest（高风险，全量摄入）
-
-### 预估
-- 总耗时: ~30 分钟
-- 并行可缩短至: ~10 分钟
-
----
-执行命令: `/lcw ingest --batch 5`（每批 5 个 repo）
-或: `/lcw sync --plan`（只看 sync 计划）
-```
-
-**触发场景**：
-- 用户说"先看看要做什么"、"帮我规划一下"
-- 批量操作前自动展示
-
----
-
-### 批量执行模式
-
-**适用命令**：ingest、sync、lint
-
-**`--plan`**：只展示计划，不执行
-
-```
-/lcw ingest --plan    # 展示摄入计划
-/lcw sync --plan      # 展示增量同步计划
-/lcw lint --plan      # 展示健康检查计划
-```
-
-**`--batch N`**：分批执行，每批 N 个 repo（默认 N=5）
-
-```
-/lcw ingest --batch     # 默认每批 5 个 repo
-/lcw ingest --batch 3   # 每批 3 个 repo
-/lcw sync --batch 10    # 每批 10 个 repo
-```
-
-**自动分批**：当待处理 repo 超过 20 个时，自动启用分批模式（每批 5 个），用户可在确认时调整。
-
-**执行流程**：
-
-1. 生成计划，展示待处理的 repo 列表
-2. 用户确认后开始执行
-3. 每批执行完成后：
-   - 展示本批结果
-   - 询问是否继续下一批
-   - 用户可选择：继续 / 暂停 / 跳过某些 repo
-4. 全部完成后输出总结
-
-**交互示例**：
-
-```
-## 批次 1/7 (repo 1-5)
-
-处理中: alpha, beta, gamma, delta, epsilon
-...
-
-### 批次结果
-- alpha: ✓ 创建 12 个页面
-- beta: ✓ 更新 3 个页面
-- gamma: ✓ 无变更
-- delta: ✗ 失败（权限问题）
-- epsilon: ✓ 创建 8 个页面
-
----
-继续下一批？(y/n/skip delta)
-```
+**触发场景**：用户说"先看看要做什么"、"帮我规划一下"，或批量操作前自动展示。
 
 ---
 
 ### /lcw pull [repo]
 
-管理 `.sources/` 目录中的代码仓库——克隆新 repo 或更新已有 repo。
+管理 `.sources/` 中的代码——克隆新 repo 或更新已有 repo。无参数时智能推荐下一批（基于依赖关系分析）。
 
-pull 是 ingest/sync 的前置步骤：先有代码，才能摄入知识。但 ingest 在发现 `.sources/` 中缺少代码时也会自动触发 pull，所以大多数时候不需要手动执行。pull 的独立价值在于**批量管理代码**和**智能推荐下一批该拉什么**。
-
-#### 单 repo 模式
-
-`/lcw pull <repo-name>`
-
-1. 从 `repos.md` 中查找该 repo 的 git 地址
-2. 如果 `.sources/{repo-name}/` 不存在 → `git clone --depth 1` 浅克隆
-3. 如果已存在 → `git pull`（如果是浅克隆且需要历史，先 `git fetch --unshallow`）
-4. 更新 `repos/{repo-name}.md` 的 frontmatter：`clone_status`、`last_fetched`、`head_commit`
-
-#### 无参数模式（智能推荐）
-
-`/lcw pull`
-
-不带参数时，自动发现最值得拉取的 repo：
-
-1. 读取 `repos.md` 获取全量清单
-2. 对比 `repos/` 中每个 repo 的 `clone_status`，分为三组：
-   - **未拉取**：`repos.md` 中有但 `.sources/` 中没有
-   - **已过期**：`.sources/` 中有但 `last_fetched` 超过指定天数（默认 7 天）
-   - **已最新**：最近拉取过
-3. **推荐下一批**（优先级从高到低）：
-   - 被已摄入的 repo 引用但尚未拉取的依赖（从 `interfaces/*.md` 和 `modules/*.md` 的依赖关系中提取）
-   - `repos.md` 中标注为核心/高优先级的 repo
-   - 已过期的 repo（按过期时间排序）
-   - 其余未拉取的 repo
-4. 展示推荐列表，用户确认后批量执行
-
-#### 克隆策略
-
-- 默认**浅克隆**（`--depth 1`）：节省空间，够 ingest 用
-- 当 sync 或 activities 需要历史时，自动 `git fetch --unshallow` 加深
-- `repos/{name}.md` 的 frontmatter 记录 `clone_depth: shallow | full`
-
-#### 输出格式
-
-```
-## pull 完成
-
-### 本次操作
-- 新克隆: 3 (alpha, beta, gamma)
-- 已更新: 5
-- 失败: 1 (delta — 权限不足)
-
-### 总览
-- 已拉取: 28/150 (19%)
-- 推荐下一批: epsilon, zeta, eta（被 alpha 和 beta 引用）
-```
+**执行前**：读取 `references/pull.md`。
 
 ---
 
 ### /lcw ingest [repo]
 
-摄入代码仓库到 wiki。
+全量扫描代码仓库，生成结构化 wiki 页面。从 `.sources/{repo}/` 读取代码（如果缺少会自动 pull）。
 
-**代码来源**：从 `.sources/{repo-name}/` 读取代码（只读）。如果该 repo 尚未克隆到 `.sources/`，自动执行 pull 逻辑先克隆。
-
-**目的**：把代码仓库从零变成结构化的 wiki 知识。代码告诉你系统是什么，文档告诉你为什么，wiki 把两者编织在一起。
-
-#### 单 repo 模式
-
-**已有 wiki 的处理**：
-
-- 不存在 `repos/{name}.md` → 全量摄入
-- 已存在且无新提交 → 报告"已是最新"，建议 `/lcw lint`
-- 已存在且有新提交 → 建议 `/lcw sync`（增量更快更安全）
-
-**分析阶段（只读）**：
-
-1. **扫描结构**：识别语言、框架、入口点，划分模块边界
-2. **规模评估**：主要模块 >15 个时切换分批模式
-3. **代码通道**：提取公共 API、依赖关系、关键数据类型、业务词汇
-4. **数据库 Schema 分析**：识别上帝表（30+ 字段）、共享表、外键关系
-5. **状态机提取**：扫描 status 枚举、转换逻辑、实体生命周期
-6. **领域模型识别**：实体 vs 值对象、聚合根、模型风格（rich/anemic/procedural/functional）
-7. **笔记通道**：读取 README、CHANGELOG、关键注释、最近 commit
-8. **基础设施通道**：消息流分析、跨切面关注点
-9. **交叉验证**：标记 phantom feature、undocumented、stale docs、boundary violation
-10. **领域综合**：推断业务领域边界、分类（core/supporting/generic）、追踪核心业务流程
-
-**覆盖完整性检查**：
-
-摄入前列出所有将被处理的目录，摄入后验证：
-- 对比代码目录树与已创建的模块页面
-- 输出覆盖报告：`已覆盖: X/Y 个目录`
-- 如果有目录未覆盖，说明原因（测试目录、配置目录、或遗漏）
-
-**忽略规则**（默认不摄入）：
-- `test/`, `tests/`, `__tests__/` — 测试代码
-- `vendor/`, `node_modules/` — 第三方依赖
-- `.git/`, `.github/` — Git 相关
-- `dist/`, `build/`, `target/` — 构建产物
-- `docs/` — 文档（单独处理）
-
-**写入阶段**：
-
-按 SCHEMA.md 创建页面：
-- `flows/{name}.md` — 核心业务流程
-- `domains/{name}.md` — 业务领域
-- `repos/{name}.md` — 仓库主页
-- `modules/{repo}--{module}.md` — 模块页面
-- `interfaces/` — 跨 repo 接口
-- 更新 `overview.md`、`glossary.md`
-
-**输出格式**：
-
-```
-## 摄入完成: {repo-name}
-
-### 覆盖情况
-- 代码目录: 15 个
-- 模块页面: 15 个
-- 覆盖率: 100%
-
-### 创建页面
-- repos/{name}.md
-- modules/{name}--auth.md
-- modules/{name}--order.md
-- ...
-
-### 未覆盖目录
-- (无) 或列出并说明原因
-```
-
-#### 批量模式（无参数）
-
-**规划**：扫描所有 repo，分类为：
-- 未摄入 → 全量 ingest
-- 有新提交 → sync
-- 无新提交 → 局部 lint
-
-**执行模式**：
-
-默认：展示计划 → 用户确认 → 执行
-
-```
-/lcw ingest
-
-## 执行计划
-| repo | 操作 | 复杂度 |
-|------|------|--------|
-| alpha | ingest | 高 |
-| beta | sync | 中 |
-| gamma | skip | - |
-
-执行？(y/n/--batch N)
-```
-
-`--plan`：只展示计划，不执行
-
-`--batch N`：分批执行，每批 N 个 repo
-
-**执行**：
-
-1. **展示计划**：列出待处理的 repo 和操作类型
-2. **用户确认**：可选择立即执行、分批执行、或取消
-3. **分批执行**：每批完成后暂停，询问是否继续
-4. **串行写入**：逐个 repo 写入（避免共享资源冲突）
-5. **跨 repo 整合**：补全跨 repo 流程、审视领域边界、整理 interfaces/
-
-**log 记录**：
-```
-## [ISO时间] ingest | 批量同步完成
-- 总 repo 数: N (ingest: A, sync: B, lint: C, 失败: D)
-- 总页面数: X (新建: Y, 更新: Z)
-```
+**执行前**：读取 `references/ingest.md`。
 
 ---
 
 ### /lcw sync [repo]
 
-增量同步最近变更到 wiki。
+增量同步最近变更到 wiki。只关注"什么变了"，比 ingest 更快更安全。自动 git pull 更新 `.sources/{repo}/` 后再同步。
 
-**与 ingest 的区别**：ingest 从零理解整个 repo，sync 只关注"什么变了"。
-
-**前置条件**：repo 已存在于 `.sources/` 中（如果没有，提示先执行 `/lcw pull`）。sync 开始前会自动 `git pull` 更新 `.sources/{repo}/` 中的代码。
-
-#### 单 repo 模式
-
-1. 读取 `repos/{name}.md` 的 `last_synced_commit`
-2. 用 `git log {sha}..HEAD` 查看新提交
-3. 如果变更 >50 文件或大规模重构 → 建议 `/lcw ingest`
-4. 更新受影响的模块、接口、决策、问题页面
-5. 更新 `last_synced` 和 `last_synced_commit`
-
-**关注点**：
-- 接口变动 → 更新 interfaces/
-- 架构决策 → 创建 decisions/
-- 新问题 → 创建 issues/
-- 业务词汇变动 → 更新 glossary.md
-- 领域模型变更 → 更新 domains/
-
-#### 批量模式
-
-**规划**：扫描所有已摄入的 repo，逐个检查新提交
-
-**执行模式**：
-
-默认：展示计划 → 用户确认 → 执行
-
-`--plan`：只展示计划，不执行
-
-`--batch N`：分批执行，每批 N 个 repo
-
-**执行**：
-
-1. 展示计划：列出有新提交的 repo 和 commit 数量
-2. 用户确认
-3. 逐个执行 sync，每个 repo 在独立 subagent 中处理
+**执行前**：读取 `references/sync.md`。
 
 ---
 
 ### /lcw lint [repo]
 
-健康检查与主动修复。
+健康检查与主动修复。三阶段：drift 检测→覆盖率补充→静态检查。发现问题立即修复，不只报告。
 
-**核心原则**：lint 不是只报告问题，而是主动修复。发现问题后必须采取行动。
-
-#### 检查与修复流程
-
-**第一阶段：Drift 检测与修复（最重要）**
-
-对每个已摄入的 repo：
-1. 读取 `repos/{name}.md` 的 `last_synced_commit`
-2. 对比 HEAD：如果 `last_synced_commit != HEAD`，说明有 drift
-3. **立即执行 sync 逻辑**：
-   - 运行 `git diff {last_synced_commit}..HEAD`（在 `.sources/{repo}/` 中）查看变更
-   - 根据变更内容更新相关 wiki 页面（modules/、interfaces/、domains/ 等）
-   - 更新 `last_synced` 和 `last_synced_commit`
-4. 记录修复内容到 log.md
-
-**第二阶段：覆盖率检查与补充**
-
-1. 扫描代码目录，识别所有模块（包含主要业务代码的目录）
-2. 对比 `modules/` 目录，找出缺失的模块页面
-3. **自动补充**：对缺失的模块执行 ingest 逻辑，创建对应的 module 页面
-4. 输出覆盖率报告：X/Y 个模块已覆盖
-
-**第三阶段：静态检查与修复**
-
-1. **链接完整性**：找出孤立页面和断链 → 自动修复路径
-2. **业务词汇一致性**：检查 glossary.md 的"现状用法"字段与实际使用 → 自动修正。**保留 DDD 字段**（领域定义、差距、决策、消解状态）不覆盖
-3. **Issues 回顾**：检查 open 状态的 issue，如果相关代码已变更 → 更新状态
-4. **领域健康检查**：核心实体列表、模块引用、分类合理性 → 修复不一致。**保留 domains/ 的 DDD 字段**（`ddd_context`/`ddd_status` + "DDD 视角"章节）不覆盖
-5. **流程健康检查**：领域事件双向一致性 → 补充缺失的事件
-
-#### 输出格式
-
-```
-## 健康检查报告
-
-### Drift 修复
-- repo-a: ccfba0c → 0a3feb0，更新了 3 个页面
-- repo-b: 无变更
-- repo-c: 发现 drift，已同步
-
-### 覆盖率补充
-- 新增模块页面: user-service, payment-gateway
-- 覆盖率: 35/36 (97%)
-
-### 静态修复
-- 修复断链: 9 个
-- 词汇表修正: 2 条
-
-### 评分: 9/10
-```
-
-**注意**：如果变更量过大（>50 文件或大规模重构），lint 应报告"建议运行 /lcw ingest 重新摄入"，而不是尝试增量更新。
-
-#### 执行模式
-
-**默认模式**：执行前展示计划，用户确认后执行
-
-```
-/lcw lint
-# 输出计划 → 用户确认 → 执行
-```
-
-**`--plan` 模式**：只展示计划，不执行
-
-```
-/lcw lint --plan
-
-## 执行计划
-- repo-a: drift 检测 (2 commits ahead)
-- repo-b: 覆盖率检查 (缺失 3 个模块)
-- repo-c: 无需处理
-- ...
-
-是否执行？(y/n)
-```
-
-**`--batch N` 模式**：分批执行
-
-```
-/lcw lint --batch 5
-
-## 批次 1/7
-处理: repo-a, repo-b, repo-c, repo-d, repo-e
-...
-继续？(y/n/skip <repo>)
-```
+**执行前**：读取 `references/lint.md`。
 
 ---
 
@@ -590,191 +176,36 @@ pull 是 ingest/sync 的前置步骤：先有代码，才能摄入知识。但 i
 **流程**：
 
 1. 读取 `index.md`，定位相关页面（3-8 个）
-2. 优先查阅 `domains/`（业务逻辑），再用 `modules/` 补充细节。如果 `ddd/` 目录已有产出且与问题相关，同时查阅 DDD 页面作为补充视角——回答时区分"代码现状"和"DDD 目标模型"两个层面
-3. **验证源码**：根据 wiki 中的路径引用，读取实际代码，核对：
-   - API 签名是否变化
-   - 数据结构字段是否变化
-   - 状态枚举是否增加/减少
+2. 优先查阅 `domains/`（业务逻辑），再用 `modules/` 补充细节。如果 `ddd/` 目录已有产出且与问题相关，同时查阅 DDD 页面——回答时区分"代码现状"和"DDD 目标模型"两个层面
+3. **验证源码**：根据 wiki 中的路径引用，读取 `.sources/` 中的实际代码，核对 API 签名、数据结构、状态枚举是否变化
 4. **发现不一致 → 立即修正 wiki 页面**
 5. 检查术语是否与 glossary.md 一致
-6. **回答后更新**：如果查询过程产生了新的理解或发现，更新 wiki：
-   - 新发现的调用关系 → 补充到相关页面
-   - 新理解的业务规则 → 记录到 domains/
-   - 新发现的代码模式 → 记录到 concepts/
+6. **回答后更新**：如果查询过程产生了新的理解或发现，更新 wiki（新调用关系→相关页面，新业务规则→domains/，新模式→concepts/）
 7. 回答：先结论，再展开，区分信息来源
 
 **词汇校验**：如果术语是"多义"状态，明确说明当前回答基于哪个领域。
 
 **人反馈处理**：
-
-当用户对 wiki 内容提出反馈（如"这个描述不对"、"实际上不是这样"）：
-1. **验证反馈**：读取用户指出的源码，验证用户说的是否正确
-2. **如果验证通过**：更新 wiki，记录修正来源
-3. **如果验证不通过**：解释为什么 wiki 当前描述是正确的，引用具体代码
-4. **如果无法确定**：在 issues/ 创建问题页面，标记为"待确认"
-
-示例：
-```
-用户反馈: "User 的 Role 应该还有 SuperAdmin"
-验证: 读取 user/user.go，发现确实有 RoleSuperAdmin 常量
-更新: 在 modules/lcw-test-repo--user.md 中添加 RoleSuperAdmin，标记来源为"用户反馈 + 代码验证"
-```
+1. 验证反馈：读取用户指出的源码
+2. 验证通过 → 更新 wiki，记录修正来源
+3. 验证不通过 → 解释并引用代码
+4. 无法确定 → 创建 issues/ 页面，标记"待确认"
 
 ---
 
 ### /lcw file <name>
 
-归档对话洞察到 wiki。
+归档对话洞察到 wiki。根据内容类型判断归档位置（queries/concepts/decisions/issues/ddd），按 SCHEMA.md 模板创建页面，建立双向链接。
 
-**为什么需要归档**：对话是短暂的，wiki 是持久的。一次深度调试可能揭示了隐藏耦合，一次架构讨论可能产生了关键决策。
-
-**判断类别**：
-
-| 内容类型 | 归档位置 |
-|---------|---------|
-| 跨模块分析、调用链梳理 | `queries/` |
-| 设计模式或约定 | `concepts/` |
-| 架构决策讨论 | `decisions/{NNN}-name.md` |
-| 问题或风险 | `issues/` |
-| DDD 领域建模讨论 | `ddd/decisions.md` 或相关 `ddd/` 页面 |
-
-**写入**：
-
-1. 按 SCHEMA.md 对应模板创建页面
-2. 添加 `[[wikilink]]` 到相关页面
-3. 在被引用页面补充反向链接
-4. 检查词汇表，补充新术语
-5. 更新 `index.md`
+**执行前**：读取 `references/file.md`。
 
 ---
 
-### /lcw activities
+### /lcw activities <action>
 
-按自然月切片地分析多 repo 的提交活动，支持跨时间窗的功能视角与人员视角聚合查询。
+按自然月切片分析提交活动。子动作：plan（展示计划）、sync（抓取写入桶）、ask（查询聚合）。支持功能视角和人员视角。
 
-**为什么独立成一条命令**：`ingest / sync / lint` 维护"系统当前是什么"，而 activities 维护"过去发生了什么"。两条链路解耦——activities 用日期窗口，与 `last_synced_commit` 无关；过去月幂等不可变，当月按需刷新；查询时聚合任意时间窗。
-
-#### 数据结构
-
-```
-activities/
-├── _index.md                       # 桶目录：哪些 repo / 哪些月份已有桶 + 各桶 extracted_at
-├── _aliases.yaml                   # （可选）作者归一化映射
-└── {repo}--{YYYY-MM}.md            # 月度桶：每 (repo, 自然月) 一个
-```
-
-桶页面 schema 与必含章节见 SCHEMA.md 的 `activities/{repo}--{YYYY-MM}.md` 段落。
-
-#### 子动作
-
-```
-/lcw activities plan                                  # 展示将抓取/刷新哪些桶，不执行
-/lcw activities sync [repo] [--months N]              # 抓取并写入桶
-/lcw activities sync [repo] --from YYYY-MM --to YYYY-MM
-/lcw activities ask <question> [--lens feature|people|both] [--months N]
-/lcw activities ask <question> --from YYYY-MM --to YYYY-MM [--archive]
-```
-
-**统一时间参数**：
-
-- `--months N`（默认 3）：回看最近 N 个自然月，含当月
-- `--from YYYY-MM --to YYYY-MM`：显式区间，覆盖 `--months`
-- 无 repo 参数 → 处理所有已 ingest 的 repo（即存在 `repos/{name}.md` 的）
-
-#### /lcw activities plan
-
-输出待办矩阵——哪些 (repo, 月) 桶缺失、哪些当月需刷新、哪些已是 closed 跳过。不写文件。
-
-```
-## activities 计划（窗口：2026-02 ~ 2026-04）
-
-| repo  | 2026-02 | 2026-03 | 2026-04 |
-|-------|---------|---------|---------|
-| alpha | 缺失    | 已 closed | 当月（刷新） |
-| beta  | 缺失    | 缺失    | 当月（刷新） |
-| gamma | 已 closed | 已 closed | 当月（刷新） |
-
-待写入: 3 个桶  待刷新: 3 个桶  跳过: 3 个桶
-执行: /lcw activities sync --months 3
-```
-
-#### /lcw activities sync
-
-抓取并写入月度桶。对每个 (repo × 月) 组合：
-
-1. **判断是否需要写**
-   - 桶不存在 → 抓取并写入
-   - 桶已存在且 `month_status: closed` 且非当月 → 跳过（幂等）
-   - 桶已存在且 `month_status: current` 或为当月 → 重新抓取并覆盖
-2. **抓取原始数据**（只读，不写中间文件）
-   ```
-   git log --since="{YYYY-MM-01}" --until="{下个月 01}" \
-           --pretty=format:"%h|%ae|%an|%ad|%s" --date=short \
-           --shortstat --no-merges
-   git log --since=... --until=... --name-only --pretty=format:"%h|%ae|%an" --no-merges
-   ```
-3. **升维**（关键步骤，不是简单转写）
-   - 文件路径 → 模块映射：用现有 `modules/{repo}--{module}.md` 中的 module 字段把文件归到模块
-   - commit subject 前缀粗分类：feat / fix / refactor / chore / docs / test / perf / ci
-   - 高影响提交识别：≥10 文件 或 ≥500 LOC（默认阈值，可在 frontmatter 注记）
-   - 作者聚焦模块：每作者 ≥80% 提交落在哪些模块
-   - 用一段叙事总结本月主旋律——LLM 写，不要模板填空
-4. **作者归一化**
-   - 若存在 `activities/_aliases.yaml` → 按其映射合并
-   - 否则按 `(name, email)` 默认聚合，相同 email 算同一人
-5. **写入** `activities/{repo}--{YYYY-MM}.md`，frontmatter + 6 个必含章节
-6. **更新** `activities/_index.md`（桶清单 + extracted_at）
-7. **写 log.md**：`## [ISO] activities sync | repo={repo} months={list} 写入={N} 跳过={M}`
-
-**异常处理**：
-
-- repo 缺失或非 git → 跳过 + 报告，不中断批量
-- 该月该 repo 无提交 → 写一个 `commit_count: 0` 的占位桶（标 `month_status: closed`），避免下次 sync 重抓
-- 该月该 repo 还未存在（首次 commit 在窗口之后） → 同上，标 0 + 备注
-- 与 `repos/{name}.md` 的 `last_synced_commit` 不一致 → 不影响 activities（activities 用日期窗口而非 commit 范围）
-
-**批量执行**：沿用顶部"批量执行模式"约定（`--plan`、`--batch N`、超过 20 个 repo 自动分批）。
-
-#### /lcw activities ask
-
-按时间窗回答问题，不抓新数据。
-
-**流程**：
-
-1. 解析时间窗 → 算出涉及哪些 (repo × 月) 桶
-2. 读 `activities/_index.md`，确认所需桶都存在
-   - 若缺失 → **不要隐式 sync**，直接提示用户先 `/lcw activities sync --from ... --to ...`
-3. 加载相关桶的 frontmatter（廉价聚合）+ 必要章节
-4. 按 `--lens` 输出：
-   - `feature`（功能视角）：跨 repo 跨月汇总 top_modules，把每月主题串成时间线，高影响提交按 domain / module 分桶，集中输出风险信号
-   - `people`（人员视角）：合并 frontmatter 的 `top_authors`（按 canonical_name），输出每人的主聚焦模块、跨 repo 广度、月度活跃度文字曲线（"2月↑ 3月→ 4月↓"）
-   - `both`（默认）：先 feature 再 people
-5. **关键纪律**：
-   - 描述事实，不打分。例："她是 modules/alpha--payment 过去 3 个月的唯一活跃维护者"，不写"她是 9 分员工"
-   - 区分**信息来源**：哪些是从桶里直接读出的事实（标"来自 activities/X--YYYY-MM.md"），哪些是 LLM 综合推断（标"推断"）
-   - 不泄漏作者邮箱
-6. `--archive` → 把回答写入 `queries/activities-{from}--{to}.md`（沿用 queries/ 的页面 schema），并在 log.md 记录
-
-#### 与主线 wiki 的边界
-
-- activities 操作**只写** `activities/`、`log.md`、`index.md`
-- 不修改 `repos/`、`modules/`、`domains/`、`interfaces/`、`glossary.md`
-- 例外：`ask` 时如发现明确的技术债 / 风险，**可以**新建 `issues/{name}.md`（沿用 issues 的 schema），但需在回答中明确告知用户
-
-#### log 记录
-
-```
-## [ISO时间] activities sync | repos={count} months={list}
-- 写入: 12 个桶（alpha--2026-02, ...）
-- 刷新: 4 个当月桶
-- 跳过: 18 个 closed 桶
-- 失败: 0
-
-## [ISO时间] activities ask | "过去 3 个月谁在做 payment？" lens=people
-- 窗口: 2026-02..2026-04
-- 涉及桶: 36 个 (12 repos × 3 months)
-- 归档: queries/activities-2026-02--2026-04.md
-```
+**执行前**：读取 `references/activities.md`。
 
 ---
 
@@ -782,7 +213,7 @@ activities/
 
 反向 DDD 梳理——从代码考古出发重建领域模型。
 
-**首次使用？** 直接跑 `/lcw ddd`，交互式引导会一步步走（先决判断 → 战略 → 战术 → 演进）。无需提前读文档。
+**首次使用？** 直接跑 `/lcw ddd`，交互式引导会一步步走。
 
 **执行前**：先读取 `references/ddd-core.md`（共享基础），再按子命令读取对应文件：
 - `/lcw ddd strategic` → 加读 `references/ddd-strategic.md`
@@ -790,31 +221,6 @@ activities/
 - `/lcw ddd evolution` → 加读 `references/ddd-evolution.md`
 - `/lcw ddd audit` → 加读 `references/ddd-audit.md`
 - `/lcw ddd`（全流程）→ 先读 `ddd-strategic.md`，后续按阶段逐步加载
-
-不需要读取 SCHEMA.md——DDD 所需的全部信息都在这些参考文件中。
-
-**子命令**：
-
-| 命令 | 作用 |
-|------|------|
-| `/lcw ddd` | 交互式全流程：先决判断 → 战略 → 战术 → 演进 |
-| `/lcw ddd strategic` | 战略层：子域划分、烟囱检测、限界上下文、上下文映射、统一语言 |
-| `/lcw ddd tactical <name>` | 战术层：对指定上下文做聚合根 / 事件 / ACL / 服务建模 |
-| `/lcw ddd evolution` | 演进层：重构路线图、过渡架构、迁移指南、质量基线 |
-| `/lcw ddd audit` | 漂移检测：对比代码现实与 DDD 模型的差异 |
-
-**前置条件**：wiki 中需有足够的代码事实页面。如果 `domains/`、`modules/` 为空或过少，提示用户先执行 `/lcw ingest`。
-
-**产出目录**：`ddd/`（含 `tactical/` 和 `evolution/` 子目录）。DDD 产出与代码事实页面分开存放——代码事实记录"是什么"，DDD 页面记录"应该是什么"。每次 DDD 操作完成后更新 `ddd/status.md`（状态总览/仪表盘）。
-
-**与 wiki 的交互**（遵循三层视角模型，详见 SCHEMA.md "视角约定"）：
-- 读取 `domains/`、`modules/`、`interfaces/`、`glossary.md`、`flows/`、`activities/` 作为分析输入
-- 发现的问题回写到 `issues/`
-- 统一语言直接增强 `glossary.md` 的 DDD 字段（领域定义、差距、决策、消解状态），不单独建文件
-- 在 `domains/*.md` 中更新 DDD 指向（frontmatter 的 `ddd_context`/`ddd_status` + 底部"DDD 视角"章节）
-- 不修改 `modules/`、`repos/` 的主体内容——这些由 ingest/sync/lint 维护
-
-**日志**：所有操作记录到 `log.md`，格式见 `references/ddd-core.md`。
 
 ---
 

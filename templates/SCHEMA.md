@@ -1,4 +1,4 @@
-# __wiki__ Schema
+# Wiki Schema
 
 > 本文件是 wiki 的结构约定。LLM 在执行任何 wiki 操作前应先读取本文件。
 
@@ -14,8 +14,8 @@ wiki 中的内容分为三个视角层次：
 
 | 层次 | 位置 | 维护者 | 含义 |
 |------|------|--------|------|
-| **现状理解** | `__wiki__/` 根目录（repos/, modules/, domains/, flows/, interfaces/, overview.md 等） | ingest / diff / lint | 代码中实际呈现的结构 |
-| **目标设计** | `__wiki__/ddd/` | ddd 命令 | 领域模型应该是什么样 |
+| **现状理解** | 项目根目录（repos/, modules/, domains/, flows/, interfaces/, overview.md 等） | ingest / diff / lint | 代码中实际呈现的结构 |
+| **目标设计** | `ddd/` | ddd 命令 | 领域模型应该是什么样 |
 | **差距** | glossary.md 的"差距"列 + ddd/gaps.md | 两方共同维护 | 现状与目标的不一致 = 治理待办 |
 
 **读者指引**：
@@ -49,25 +49,27 @@ wiki 中的内容分为三个视角层次：
 ## 目录结构
 
 ```
-__wiki__/
-├── SCHEMA.md           # 本文件
-├── overview.md         # 全局架构概览（跨 repo 协作关系）
-├── glossary.md         # 业务词汇对照表（跨 repo 术语统一）
-├── index.md            # 内容目录
-├── log.md              # 操作日志
-├── flows/              # 端到端业务流程（Event Storming 事件流）
-├── domains/            # 业务领域页面（从代码中提取的领域结构，现状理解层）
-├── repos/              # 仓库级页面，每个 repo 一个主页
-├── modules/            # 模块/服务/包页面
-├── interfaces/         # 跨 repo 接口页面
-├── concepts/           # 概念/模式/约定页面
-├── decisions/          # 架构决策记录 (ADR)
-├── issues/             # 问题、矛盾、技术债
-├── queries/            # 有价值的查询结果
-├── activities/           # 提交活动月度桶（按自然月，每 (repo, 月) 一个）
-└── ddd/                  # 反向 DDD 梳理产出
-    ├── tactical/         # 战术层（每个上下文一组文件）
-    └── evolution/        # 演进层（路线图、迁移指南）
+wiki-project/               # 项目根目录 = wiki 根目录
+├── repos.md                # 代码仓库清单（人维护，格式自由）
+├── SCHEMA.md               # 本文件
+├── overview.md             # 全局架构概览（跨 repo 协作关系）
+├── glossary.md             # 业务词汇对照表（跨 repo 术语统一）
+├── index.md                # 内容目录
+├── log.md                  # 操作日志
+├── flows/                  # 端到端业务流程（Event Storming 事件流）
+├── domains/                # 业务领域页面（从代码中提取的领域结构，现状理解层）
+├── repos/                  # 仓库级 wiki 页面（工具维护，含同步状态）
+├── modules/                # 模块/服务/包页面
+├── interfaces/             # 跨 repo 接口页面
+├── concepts/               # 概念/模式/约定页面
+├── decisions/              # 架构决策记录 (ADR)
+├── issues/                 # 问题、矛盾、技术债
+├── queries/                # 有价值的查询结果
+├── activities/             # 提交活动月度桶（按自然月，每 (repo, 月) 一个）
+├── ddd/                    # 反向 DDD 梳理产出
+│   ├── tactical/           # 战术层（每个上下文一组文件）
+│   └── evolution/          # 演进层（路线图、迁移指南）
+└── .sources/               # 克隆的源码（gitignored）
 ```
 
 ## 命名约定
@@ -414,12 +416,12 @@ schema_version: 1
 
 ## DDD 分析页面
 
-DDD 产出物属于**目标设计层**（To-Be），存放在 `__wiki__/ddd/` 目录下。详见顶部"视角约定"。
+DDD 产出物属于**目标设计层**（To-Be），存放在 `ddd/` 目录下。详见顶部"视角约定"。
 
 统一语言不单独设文件，直接增强 `glossary.md`（双视角文档）。
 
 ```
-__wiki__/ddd/
+ddd/
 ├── status.md                       # 状态总览（DDD 分析仪表盘）
 ├── decisions.md                    # 先决决策（架构定位、梳理范围与目标）
 ├── panorama.md                     # 领域全景图（能力盘点 + 子域分类 + 烟囱报告）

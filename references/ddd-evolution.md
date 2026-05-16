@@ -11,8 +11,8 @@
 ### 输入
 
 - 所有 `ddd/` 目录下的产出
-- `__wiki__/issues/*.md` — 已知问题
-- `__wiki__/activities/*.md` — 变更频率数据（如果有）
+- `issues/*.md` — 已知问题
+- `activities/*.md` — 变更频率数据（如果有）
 
 ### 分析步骤
 

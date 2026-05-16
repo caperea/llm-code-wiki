@@ -31,7 +31,7 @@
 
 ### 推荐用法
 
-每次执行 `/lcw ingest` 或 `/lcw diff` 后，跑一次 `/lcw ddd audit`。可以在 `/lcw diff` 或 `/lcw lint` 完成后自动提示用户。
+每次执行 `/lcw ingest` 或 `/lcw sync` 后，跑一次 `/lcw ddd audit`。可以在 `/lcw sync` 或 `/lcw lint` 完成后自动提示用户。
 
 ### audit 与 gaps 的关系
 

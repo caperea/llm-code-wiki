@@ -42,8 +42,9 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 ```
 /lcw init                    # 初始化 wiki 结构
 /lcw plan                    # 生成执行计划
+/lcw pull [repo]             # 克隆或更新源码（管理 .sources/ 目录）
 /lcw ingest [repo]           # 全量扫描（单 repo 或批量智能同步）
-/lcw diff [repo]             # 增量同步最近变更
+/lcw sync [repo]             # 增量同步最近变更到 wiki
 /lcw lint [repo]             # 健康检查
 /lcw query <question>        # 查询知识库
 /lcw file <name>             # 归档对话洞察
@@ -106,14 +107,14 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 | 命令 | 词汇表操作 | 维护的字段 |
 |------|-----------|-----------|
 | ingest | 提取并追加条目，批量模式完成后跨 repo 整合 | 现状用法（定义、变体、状态） |
-| diff | 同步术语变动 | 现状用法 |
+| sync | 同步术语变动 | 现状用法 |
 | query | 校验时修正术语漂移 | 现状用法 |
 | lint | 检查一致性并自动修正 | 现状用法 |
 | file | 归档时检查新术语 | 现状用法 |
 | activities | 不修改词汇表（只读 modules 做映射） | — |
 | ddd | 构建统一语言，补充领域定义和差距分析 | 领域定义、差距、决策、消解状态 |
 
-**互不覆盖**：ingest/diff/lint 写入时保留 DDD 字段；ddd 写入时保留现状用法字段。
+**互不覆盖**：ingest/sync/lint 写入时保留 DDD 字段；ddd 写入时保留现状用法字段。
 
 **术语来源优先级**（信息密度排序）：
 
@@ -184,20 +185,20 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 | repo | 操作 | 原因 | 预估复杂度 |
 |------|------|------|-----------|
 | alpha | ingest | 未摄入 | 高（~500 文件） |
-| beta | diff | 3 个新提交 | 中 |
+| beta | sync | 3 个新提交 | 中 |
 | gamma | lint | 无变更 | 低 |
 | delta | skip | 已是最新 | - |
 
 ### 统计
 - 总 repo: 36
 - 需要 ingest: 1
-- 需要 diff: 12
+- 需要 sync: 12
 - 需要 lint: 20
 - 无需处理: 3
 
 ### 建议执行顺序
 1. 先处理 lint（低风险，快速）
-2. 再处理 diff（中等风险，增量更新）
+2. 再处理 sync（中等风险，增量更新）
 3. 最后处理 ingest（高风险，全量摄入）
 
 ### 预估
@@ -206,7 +207,7 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 
 ---
 执行命令: `/lcw ingest --batch 5`（每批 5 个 repo）
-或: `/lcw diff --plan`（只看 diff 计划）
+或: `/lcw sync --plan`（只看 sync 计划）
 ```
 
 **触发场景**：
@@ -217,13 +218,13 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 
 ### 批量执行模式
 
-**适用命令**：ingest、diff、lint
+**适用命令**：ingest、sync、lint
 
 **`--plan`**：只展示计划，不执行
 
 ```
 /lcw ingest --plan    # 展示摄入计划
-/lcw diff --plan      # 展示增量同步计划
+/lcw sync --plan      # 展示增量同步计划
 /lcw lint --plan      # 展示健康检查计划
 ```
 
@@ -232,7 +233,7 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 ```
 /lcw ingest --batch     # 默认每批 5 个 repo
 /lcw ingest --batch 3   # 每批 3 个 repo
-/lcw diff --batch 10    # 每批 10 个 repo
+/lcw sync --batch 10    # 每批 10 个 repo
 ```
 
 **自动分批**：当待处理 repo 超过 20 个时，自动启用分批模式（每批 5 个），用户可在确认时调整。
@@ -268,11 +269,67 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 
 ---
 
+### /lcw pull [repo]
+
+管理 `.sources/` 目录中的代码仓库——克隆新 repo 或更新已有 repo。
+
+pull 是 ingest/sync 的前置步骤：先有代码，才能摄入知识。但 ingest 在发现 `.sources/` 中缺少代码时也会自动触发 pull，所以大多数时候不需要手动执行。pull 的独立价值在于**批量管理代码**和**智能推荐下一批该拉什么**。
+
+#### 单 repo 模式
+
+`/lcw pull <repo-name>`
+
+1. 从 `repos.md` 中查找该 repo 的 git 地址
+2. 如果 `.sources/{repo-name}/` 不存在 → `git clone --depth 1` 浅克隆
+3. 如果已存在 → `git pull`（如果是浅克隆且需要历史，先 `git fetch --unshallow`）
+4. 更新 `repos/{repo-name}.md` 的 frontmatter：`clone_status`、`last_fetched`、`head_commit`
+
+#### 无参数模式（智能推荐）
+
+`/lcw pull`
+
+不带参数时，自动发现最值得拉取的 repo：
+
+1. 读取 `repos.md` 获取全量清单
+2. 对比 `repos/` 中每个 repo 的 `clone_status`，分为三组：
+   - **未拉取**：`repos.md` 中有但 `.sources/` 中没有
+   - **已过期**：`.sources/` 中有但 `last_fetched` 超过指定天数（默认 7 天）
+   - **已最新**：最近拉取过
+3. **推荐下一批**（优先级从高到低）：
+   - 被已摄入的 repo 引用但尚未拉取的依赖（从 `interfaces/*.md` 和 `modules/*.md` 的依赖关系中提取）
+   - `repos.md` 中标注为核心/高优先级的 repo
+   - 已过期的 repo（按过期时间排序）
+   - 其余未拉取的 repo
+4. 展示推荐列表，用户确认后批量执行
+
+#### 克隆策略
+
+- 默认**浅克隆**（`--depth 1`）：节省空间，够 ingest 用
+- 当 sync 或 activities 需要历史时，自动 `git fetch --unshallow` 加深
+- `repos/{name}.md` 的 frontmatter 记录 `clone_depth: shallow | full`
+
+#### 输出格式
+
+```
+## pull 完成
+
+### 本次操作
+- 新克隆: 3 (alpha, beta, gamma)
+- 已更新: 5
+- 失败: 1 (delta — 权限不足)
+
+### 总览
+- 已拉取: 28/150 (19%)
+- 推荐下一批: epsilon, zeta, eta（被 alpha 和 beta 引用）
+```
+
+---
+
 ### /lcw ingest [repo]
 
 摄入代码仓库到 wiki。
 
-**代码来源**：从 `.sources/{repo-name}/` 读取代码（只读）。如果该 repo 尚未克隆到 `.sources/`，先根据 `repos.md` 中的地址克隆（浅克隆 `--depth 1`）。
+**代码来源**：从 `.sources/{repo-name}/` 读取代码（只读）。如果该 repo 尚未克隆到 `.sources/`，自动执行 pull 逻辑先克隆。
 
 **目的**：把代码仓库从零变成结构化的 wiki 知识。代码告诉你系统是什么，文档告诉你为什么，wiki 把两者编织在一起。
 
@@ -282,7 +339,7 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 
 - 不存在 `repos/{name}.md` → 全量摄入
 - 已存在且无新提交 → 报告"已是最新"，建议 `/lcw lint`
-- 已存在且有新提交 → 建议 `/lcw diff`（增量更快更安全）
+- 已存在且有新提交 → 建议 `/lcw sync`（增量更快更安全）
 
 **分析阶段（只读）**：
 
@@ -345,7 +402,7 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 
 **规划**：扫描所有 repo，分类为：
 - 未摄入 → 全量 ingest
-- 有新提交 → diff
+- 有新提交 → sync
 - 无新提交 → 局部 lint
 
 **执行模式**：
@@ -359,7 +416,7 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 | repo | 操作 | 复杂度 |
 |------|------|--------|
 | alpha | ingest | 高 |
-| beta | diff | 中 |
+| beta | sync | 中 |
 | gamma | skip | - |
 
 执行？(y/n/--batch N)
@@ -380,17 +437,19 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 **log 记录**：
 ```
 ## [ISO时间] ingest | 批量同步完成
-- 总 repo 数: N (ingest: A, diff: B, lint: C, 失败: D)
+- 总 repo 数: N (ingest: A, sync: B, lint: C, 失败: D)
 - 总页面数: X (新建: Y, 更新: Z)
 ```
 
 ---
 
-### /lcw diff [repo]
+### /lcw sync [repo]
 
-增量同步最近变更。
+增量同步最近变更到 wiki。
 
-**与 ingest 的区别**：ingest 从零理解整个 repo，diff 只关注"什么变了"。
+**与 ingest 的区别**：ingest 从零理解整个 repo，sync 只关注"什么变了"。
+
+**前置条件**：repo 已存在于 `.sources/` 中（如果没有，提示先执行 `/lcw pull`）。sync 开始前会自动 `git pull` 更新 `.sources/{repo}/` 中的代码。
 
 #### 单 repo 模式
 
@@ -423,7 +482,7 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 
 1. 展示计划：列出有新提交的 repo 和 commit 数量
 2. 用户确认
-3. 逐个执行 diff，每个 repo 在独立 subagent 中处理
+3. 逐个执行 sync，每个 repo 在独立 subagent 中处理
 
 ---
 
@@ -440,8 +499,8 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 对每个已摄入的 repo：
 1. 读取 `repos/{name}.md` 的 `last_synced_commit`
 2. 对比 HEAD：如果 `last_synced_commit != HEAD`，说明有 drift
-3. **立即执行 diff 逻辑**：
-   - 运行 `git diff {last_synced_commit}..HEAD` 查看变更
+3. **立即执行 sync 逻辑**：
+   - 运行 `git diff {last_synced_commit}..HEAD`（在 `.sources/{repo}/` 中）查看变更
    - 根据变更内容更新相关 wiki 页面（modules/、interfaces/、domains/ 等）
    - 更新 `last_synced` 和 `last_synced_commit`
 4. 记录修复内容到 log.md
@@ -593,7 +652,7 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 
 按自然月切片地分析多 repo 的提交活动，支持跨时间窗的功能视角与人员视角聚合查询。
 
-**为什么独立成一条命令**：`ingest / diff / lint` 维护"系统当前是什么"，而 activities 维护"过去发生了什么"。两条链路解耦——activities 用日期窗口，与 `last_synced_commit` 无关；过去月幂等不可变，当月按需刷新；查询时聚合任意时间窗。
+**为什么独立成一条命令**：`ingest / sync / lint` 维护"系统当前是什么"，而 activities 维护"过去发生了什么"。两条链路解耦——activities 用日期窗口，与 `last_synced_commit` 无关；过去月幂等不可变，当月按需刷新；查询时聚合任意时间窗。
 
 #### 数据结构
 
@@ -753,7 +812,7 @@ activities/
 - 发现的问题回写到 `issues/`
 - 统一语言直接增强 `glossary.md` 的 DDD 字段（领域定义、差距、决策、消解状态），不单独建文件
 - 在 `domains/*.md` 中更新 DDD 指向（frontmatter 的 `ddd_context`/`ddd_status` + 底部"DDD 视角"章节）
-- 不修改 `modules/`、`repos/` 的主体内容——这些由 ingest/diff/lint 维护
+- 不修改 `modules/`、`repos/` 的主体内容——这些由 ingest/sync/lint 维护
 
 **日志**：所有操作记录到 `log.md`，格式见 `references/ddd-core.md`。
 

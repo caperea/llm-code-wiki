@@ -14,7 +14,7 @@
 
 wiki 中的内容遵循**三层视角模型**：
 
-- **现状理解层**（wiki 根目录 根目录）：代码中实际呈现的结构。由 ingest/diff/lint 维护。
+- **现状理解层**（项目根目录）：代码中实际呈现的结构。由 ingest/sync/lint 维护。
 - **目标设计层**（`ddd/`）：领域模型应该是什么样。由 ddd 命令维护。
 - **差距层**（`glossary.md` 的"差距"字段 + `ddd/gaps.md`）：两者的不一致 = 治理清单。
 
@@ -107,7 +107,7 @@ DDD 分析过程中发现的内容回写到 wiki：
 - 新发现的概念 → 创建 `concepts/*.md`
 - 领域的 DDD 定位 → 更新 `domains/*.md` 的 `ddd_context`/`ddd_status` frontmatter 字段 + 底部"DDD 视角"章节
 
-DDD 不修改 `modules/*.md`、`repos/*.md` 的主体内容——这些是代码事实，由 ingest/diff/lint 维护。对于 `domains/*.md`，DDD 只写入 frontmatter 的 DDD 字段和底部的"DDD 视角"章节，不修改主体内容。对于 `glossary.md`，DDD 只写入 DDD 字段，不修改"现状用法"。
+DDD 不修改 `modules/*.md`、`repos/*.md` 的主体内容——这些是代码事实，由 ingest/sync/lint 维护。对于 `domains/*.md`，DDD 只写入 frontmatter 的 DDD 字段和底部的"DDD 视角"章节，不修改主体内容。对于 `glossary.md`，DDD 只写入 DDD 字段，不修改"现状用法"。
 
 **例外**：DDD 分析确认了上下文映射关系后，可以回写 `interfaces/*.md` 的 `relationship`、`upstream`、`downstream` 字段——这属于"代码事实的补充"（从代码中可观测但 ingest 未捕获的关系类型），而非 DDD 目标态。
 

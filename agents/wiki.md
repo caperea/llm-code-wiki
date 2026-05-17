@@ -1,5 +1,5 @@
 ---
-description: "Wiki 维护专用 agent，处理 ingest/diff/lint/file 等写操作"
+description: "Wiki 维护专用 agent，处理 ingest/sync/lint/file 等写操作"
 mode: "subagent"
 ---
 

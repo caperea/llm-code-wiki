@@ -25,9 +25,9 @@ In any multi-repo workspace:
 ```
 /lcw init                    # create __wiki__/ structure
 /lcw ingest repo-alpha       # full scan of a single repo
-/lcw ingest                  # smart sync all repos (ingest / diff / lint per repo)
-/lcw diff repo-alpha         # sync recent changes for one repo
-/lcw diff                    # sync all repos with new commits
+/lcw ingest                  # smart sync all repos (ingest / sync / lint per repo)
+/lcw sync repo-alpha         # sync recent changes for one repo
+/lcw sync                    # sync all repos with new commits
 /lcw query how does auth work across repos?
 /lcw file auth-flow-analysis # save a good answer to the wiki
 /lcw lint repo-alpha         # health check for one repo
@@ -43,7 +43,7 @@ In any multi-repo workspace:
   Code repos (read-only)          __wiki__/ (LLM writes)
   ┌──────────────────┐           ┌──────────────────────┐
   │ repo-alpha/      │──ingest──▶│ repos/  modules/     │
-  │ repo-beta/       │──diff────▶│ interfaces/ concepts/ │
+  │ repo-beta/       │──sync────▶│ interfaces/ concepts/ │
   │ repo-gamma/      │           │ decisions/ issues/    │
   └──────────────────┘           │ queries/              │
            ▲                     │ index.md  log.md      │
@@ -68,8 +68,8 @@ All commands follow a unified pattern: `/lcw <action> [repo]` — with a repo na
 | Command | What it does |
 |---------|-------------|
 | `/lcw init` | Create `__wiki__/` directory and template files, scan workspace for repos |
-| `/lcw ingest [repo]` | Full scan of one repo, or smart batch sync all repos (ingest / diff / lint per repo) |
-| `/lcw diff [repo]` | Incremental sync of one repo, or all repos with new commits |
+| `/lcw ingest [repo]` | Full scan of one repo, or smart batch sync all repos (ingest / sync / lint per repo) |
+| `/lcw sync [repo]` | Incremental sync of one repo, or all repos with new commits |
 | `/lcw lint [repo]` | Health check for one repo, or entire wiki |
 | `/lcw query <question>` | Search wiki, synthesize answer, validate against source code |
 | `/lcw file <name>` | Distill a conversation into a wiki page (analysis, decision, issue) |

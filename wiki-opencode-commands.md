@@ -13,7 +13,7 @@
 命令 (commands)          触发方式             本质
 ──────────────────────────────────────────────────────
 /lcw ingest                  /lcw ingest repo-alpha   摄入：把 raw 变成 wiki 知识
-/lcw diff                    /lcw diff repo-alpha     增量：只处理最近变更
+/lcw sync                    /lcw sync repo-alpha     增量：只处理最近变更
 /lcw query                   /lcw query 认证流程      查询：从 wiki 回答问题
 /lcw lint                    /lcw lint                体检：wiki 健康检查
 /lcw file                    /lcw file auth-deep-dive 归档：把对话内容存入 wiki
@@ -21,7 +21,7 @@
 
 为什么是这 5 个？
 
-- **ingest** 和 **diff** 分开，因为全量摄入和增量同步是完全不同的工作流——全量要扫描整个 repo 结构，增量只看 git diff
+- **ingest** 和 **sync** 分开，因为全量摄入和增量同步是完全不同的工作流——全量要扫描整个 repo 结构，增量只看 git diff
 - **query** 是最常用的操作，需要一个专门入口而不是"直接问"——因为它有特定的工作流（先读 index → 定位页面 → 读页面 → 必要时回溯源码）
 - **lint** 是维护操作，定期跑
 - **file** 解决 LLM Wiki 的核心洞察：好的对话结果应该回流到 wiki，而不是消失在聊天历史里
@@ -37,7 +37,7 @@ workspace/
 │   │   └── wiki.md            # wiki 维护专用 subagent
 │   └── commands/
 │       ├── ingest.md          # /lcw ingest 命令
-│       ├── diff.md            # /lcw diff 命令
+│       ├── sync.md            # /lcw sync 命令
 │       ├── query.md           # /lcw query 命令
 │       ├── lint.md            # /lcw lint 命令
 │       └── file.md            # /lcw file 命令
@@ -92,7 +92,7 @@ workspace/
 
 使用自定义命令操作 wiki：
 - `/lcw ingest <repo>` — 首次全量摄入一个仓库
-- `/lcw diff <repo>` — 增量同步最近变更
+- `/lcw sync <repo>` — 增量同步最近变更
 - `/lcw query <问题>` — 查询 wiki
 - `/lcw lint` — wiki 健康检查
 - `/lcw file <名称>` — 把当前对话内容归档到 wiki
@@ -126,7 +126,7 @@ workspace/
 
 ```markdown
 ---
-description: "Wiki 维护专用 agent，处理 ingest/lcw diff/lcw lint/lcw file 等写操作"
+description: "Wiki 维护专用 agent，处理 ingest/sync/lint/file 等写操作"
 mode: "subagent"
 ---
 
@@ -219,7 +219,7 @@ agent: "wiki"
 
 ---
 
-## .opencode/commands/lcw diff.md
+## .opencode/commands/lcw sync.md
 
 ```markdown
 ---
@@ -328,7 +328,7 @@ agent: "wiki"
 生成健康报告，包含：
 - 总页面数、stale 数、orphan 数
 - 需要更新的页面清单（按优先级）
-- 建议的下一步操作（哪些 repo 需要 `/lcw diff`）
+- 建议的下一步操作（哪些 repo 需要 `/lcw sync`）
 - 健康评分（0-10）
 
 将报告追加到 `__wiki__/log.md`，格式：
@@ -383,7 +383,7 @@ agent: "wiki"
                            │
               ┌────────────┼────────────┐
               │            │            │
-         /lcw ingest        /lcw diff       (直接读)
+         /lcw ingest        /lcw sync       (直接读)
         (全量首次)    (增量同步)        │
               │            │            │
               ▼            ▼            │
@@ -422,7 +422,7 @@ agent: "wiki"
 /lcw file login-to-order-flow
 
 # 有新代码合入后
-/lcw diff repo-alpha
+/lcw sync repo-alpha
 
 # 每周一次
 /lcw lint

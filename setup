@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# LCW setup — register skill with a project
+# LCW setup — register skill with a project (multi-host)
 set -e
 
 LCW_DIR="$(cd "$(dirname "$0")" && pwd -P)"
@@ -8,53 +8,86 @@ SKILL_SRC="$LCW_DIR/skills/lcw"
 # ─── Parse flags ──────────────────────────────────────────────
 
 PROJECT=""
+HOSTS=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --project)   PROJECT="$2"; shift 2 ;;
-    --project=*) PROJECT="${1#--project=}"; shift ;;
+    --host)   HOSTS="$HOSTS $2"; shift 2 ;;
+    --host=*) HOSTS="$HOSTS ${1#--host=}"; shift ;;
     -h|--help)
       cat <<'EOF'
-Usage: ./setup --project <path>
+Usage: ~/.lcw/setup [<project>] [--host <host>...]
 
-Register LCW skill with a project by creating a symlink at
-<project>/.claude/skills/lcw -> ~/.lcw/skills/lcw
+Install LCW skill into a project by creating symlinks.
+Only project-level installation is supported — no global install.
+
+Arguments:
+  <project>          Target project directory (default: current directory)
+
+Options:
+  --host <host>      Host tool: claude, codex, opencode, windsurf
+                     (default: claude; repeatable)
 
 Examples:
-  ./setup --project .              # current directory
-  ./setup --project ~/work/my-wiki # specific project
-
-Without --project, prints this help.
+  ~/.lcw/setup                                # current dir, Claude Code
+  ~/.lcw/setup ~/work/my-wiki                 # specific project
+  ~/.lcw/setup --host codex --host opencode   # multiple hosts
+  ~/.lcw/setup ~/work/my-wiki --host codex    # both
 EOF
       exit 0
       ;;
-    *)  shift ;;
+    *)
+      if [ -z "$PROJECT" ]; then
+        PROJECT="$1"
+      fi
+      shift
+      ;;
   esac
 done
 
-if [ -z "$PROJECT" ]; then
-  echo "Usage: ./setup --project <path>"
-  echo "Run ./setup --help for details."
-  exit 1
-fi
+[ -z "$PROJECT" ] && PROJECT="."
+[ -z "$HOSTS" ] && HOSTS="claude"
 
 # ─── Resolve project path ────────────────────────────────────
 
 PROJECT="$(cd "$PROJECT" && pwd -P)"
-DEST="$PROJECT/.claude/skills"
 
-mkdir -p "$DEST"
+# ─── Create symlinks ─────────────────────────────────────────
 
-# ─── Create symlink ──────────────────────────────────────────
+link_skill() {
+  local dest="$1"
+  mkdir -p "$dest"
 
-if [ -L "$DEST/lcw" ]; then
-  echo "Updating existing symlink..."
-  rm "$DEST/lcw"
-elif [ -e "$DEST/lcw" ]; then
-  echo "Error: $DEST/lcw exists and is not a symlink. Remove it first." >&2
-  exit 1
-fi
+  if [ -L "$dest/lcw" ]; then
+    rm "$dest/lcw"
+  elif [ -e "$dest/lcw" ]; then
+    echo "  skip: $dest/lcw exists and is not a symlink" >&2
+    return
+  fi
 
-ln -s "$SKILL_SRC" "$DEST/lcw"
-echo "lcw ready: $DEST/lcw -> $SKILL_SRC"
+  ln -s "$SKILL_SRC" "$dest/lcw"
+  echo "  $dest/lcw -> $SKILL_SRC"
+}
+
+host_to_path() {
+  case "$1" in
+    claude)   echo ".claude/skills" ;;
+    codex)    echo ".codex/skills" ;;
+    opencode) echo ".opencode/skills" ;;
+    windsurf) echo ".windsurf/skills" ;;
+    *)        echo "" ;;
+  esac
+}
+
+echo "Setting up LCW in $PROJECT"
+
+for HOST in $HOSTS; do
+  SKILL_DIR="$(host_to_path "$HOST")"
+  if [ -z "$SKILL_DIR" ]; then
+    echo "  unknown host: $HOST (expected: claude, codex, opencode, windsurf)" >&2
+    continue
+  fi
+  link_skill "$PROJECT/$SKILL_DIR"
+done
+
 echo ""
 echo "Run /lcw init in the project to create the wiki."

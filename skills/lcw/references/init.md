@@ -8,6 +8,8 @@
 
 ```
 ./
+├── .claude/
+│   └── CLAUDE.md  # 项目背景（从 templates/CLAUDE.md 复制，人维护）
 ├── SCHEMA.md      # 页面模板（从 templates/SCHEMA.md 复制）
 ├── index.md       # 分类目录
 ├── log.md         # 操作日志
@@ -31,4 +33,4 @@
 
 **读取 repos.md**：如果 `repos.md` 已存在，解析其中的仓库列表，生成初始的 `repos/` 页面（标记为"未拉取"）。如果不存在，创建空的 `repos.md` 并提示用户填写。
 
-**收尾**：在 log.md 记录初始化操作，输出下一步指引。
+**收尾**：在 log.md 记录初始化操作，输出下一步指引。提醒用户填写 `.claude/CLAUDE.md` 中的项目背景——这些信息帮助 Claude 理解代码背后的业务逻辑，填得越具体后续查询和摄入越精准。

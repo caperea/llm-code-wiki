@@ -30,6 +30,7 @@ Wiki 的人类浏览端是 Obsidian。wiki 项目目录直接作为 Obsidian vau
 - 不能一次性处理所有 repo，需要增量加载，按构建理解的优先级逐步展开
 - 工具应能自动推荐下一批该处理的 repo（基于依赖关系等信号）
 - 实际的代码文件不应提交到知识库的 git 仓库
+- **已知限制**：当前 repo 以名称做唯一标识（`.sources/{name}/`、`repos/{name}.md`、`modules/{name}/`）。不同来源的同名 repo（如 `team-a/common` 和 `team-b/common`）会冲突。未来需要支持别名或 `{org}/{repo}` 命名策略
 
 ## 能力要求
 

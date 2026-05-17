@@ -95,7 +95,7 @@ last_updated: {YYYY-MM-DD}
 | `glossary.md` | 统一语言的起点 |
 | `modules/*.md` 的 `model_style` | 贫血检测的直接输入 |
 | `flows/*.md` | 领域事件提取的主要来源（Event Storming 结构） |
-| `activities/*.md` | 变更频率、团队边界的数据源 |
+| `git log`（.sources/ 内） | 变更频率、团队边界的数据源 |
 | `issues/*.md` | 问题密度评估 |
 
 ### 回写（DDD → wiki）

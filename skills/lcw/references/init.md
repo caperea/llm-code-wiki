@@ -15,17 +15,16 @@
 ├── glossary.md    # 业务词汇对照表
 ├── repos.md       # 代码仓库清单（人维护）
 ├── repos/
-├── modules/
-├── interfaces/
+├── modules/       # 按仓库分子目录：modules/{repo}/
+├── interfaces/    # 跨 repo 接口
 ├── issues/
-├── notes/         # 人类输入（未验证线索）
 ├── flows/
 ├── domains/
-├── activities/
 ├── ddd/           # 反向 DDD 梳理产出
 │   ├── tactical/
 │   └── evolution/
-└── .sources/      # 克隆的源码（自动加入 .gitignore）
+├── .sources/      # 克隆的源码（自动加入 .gitignore）
+└── .inputs/       # sources 层（queries/ + notes/）
 ```
 
 **初始化 .gitignore**：确保 `.sources/` 被忽略。

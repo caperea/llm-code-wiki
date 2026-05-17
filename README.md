@@ -7,47 +7,46 @@ Based on the [LLM Wiki](llm-wiki.md) pattern by Andrej Karpathy.
 ## Install
 
 ```bash
-git clone https://github.com/caperea/llm-code-wiki.git ~/.lcw && cd ~/.lcw && ./setup
+git clone https://github.com/caperea/llm-code-wiki.git ~/.lcw
 ```
 
-`setup` auto-detects your tool (Claude Code, Codex, or OpenCode) and symlinks the commands. To specify manually:
+Then, in the project where you want to use LCW:
 
 ```bash
-./setup --host codex
+~/.lcw/setup                              # Claude Code (default)
+~/.lcw/setup --host codex                 # Codex
+~/.lcw/setup --host claude --host codex   # multiple hosts
 ```
+
+This creates a symlink from your project's skill directory to `~/.lcw/skills/lcw/`. Only project-level installation is supported — no global install.
 
 Update: `cd ~/.lcw && git pull` — symlinks pick up changes automatically.
 
 ## Usage
 
-In any multi-repo workspace:
-
 ```
-/lcw init                    # create __wiki__/ structure
+/lcw init                    # create wiki structure
+/lcw pull repo-alpha         # clone a repo into .sources/
 /lcw ingest repo-alpha       # full scan of a single repo
-/lcw ingest                  # smart sync all repos (ingest / sync / lint per repo)
 /lcw sync repo-alpha         # sync recent changes for one repo
 /lcw sync                    # sync all repos with new commits
-/lcw query how does auth work across repos?
-/lcw file auth-flow-analysis # save a good answer to the wiki
-/lcw lint repo-alpha         # health check for one repo
 /lcw lint                    # health check for entire wiki
-/lcw activities sync --months 3        # extract last 3 months of commit activity (per repo, per natural month)
-/lcw activities ask "过去 3 个月谁在做 payment？" --lens people
-/lcw activities ask "上个月主要的架构变化" --lens feature --months 1
+/lcw query how does auth work across repos?
+/lcw file auth-flow-analysis # save an insight to the wiki
+/lcw ddd strategic           # reverse DDD: strategic layer
+/lcw migrate                 # migrate old wiki to current structure
 ```
 
 ## How it works
 
 ```
-  Code repos (read-only)          __wiki__/ (LLM writes)
+  Code repos (read-only)          wiki-project/ (LLM writes)
   ┌──────────────────┐           ┌──────────────────────┐
-  │ repo-alpha/      │──ingest──▶│ repos/  modules/     │
-  │ repo-beta/       │──sync────▶│ interfaces/ concepts/ │
-  │ repo-gamma/      │           │ decisions/ issues/    │
-  └──────────────────┘           │ queries/              │
-           ▲                     │ index.md  log.md      │
-           │                     └──────────┬────────────┘
+  │ .sources/        │──ingest──▶│ repos/  modules/     │
+  │   repo-alpha/    │──sync────▶│ domains/ interfaces/ │
+  │   repo-beta/     │           │ flows/  issues/      │
+  └──────────────────┘           │ index.md  log.md     │
+           ▲                     └──────────┬───────────┘
            └──── query reads ───────────────┘
                  source code
                  when wiki
@@ -67,49 +66,69 @@ All commands follow a unified pattern: `/lcw <action> [repo]` — with a repo na
 
 | Command | What it does |
 |---------|-------------|
-| `/lcw init` | Create `__wiki__/` directory and template files, scan workspace for repos |
-| `/lcw ingest [repo]` | Full scan of one repo, or smart batch sync all repos (ingest / sync / lint per repo) |
-| `/lcw sync [repo]` | Incremental sync of one repo, or all repos with new commits |
-| `/lcw lint [repo]` | Health check for one repo, or entire wiki |
-| `/lcw query <question>` | Search wiki, synthesize answer, validate against source code |
-| `/lcw file <name>` | Distill a conversation into a wiki page (analysis, decision, issue) |
-| `/lcw activities <action>` | Commit-activity analysis sliced by natural month. `sync` extracts per-(repo, month) buckets; `ask` aggregates across any time window with feature / people lens |
+| `/lcw init` | Create wiki directory structure and template files |
+| `/lcw pull [repo]` | Clone or update repos in `.sources/` |
+| `/lcw ingest [repo]` | Full scan of a repo into wiki pages |
+| `/lcw sync [repo]` | Incremental sync of recent changes |
+| `/lcw lint [repo]` | Health check: detect drift, fix issues |
+| `/lcw query <question>` | Search wiki, answer, validate against source code, fix wiki if stale |
+| `/lcw file <name>` | Distill conversation insights into wiki pages |
+| `/lcw ddd [layer] [context]` | Reverse DDD from code (strategic, tactical, evolution, audit) |
+| `/lcw migrate` | Migrate old wiki to current structure |
+| `/lcw migrate <path> <intent>` | Recover specific files from `legacy/` to a target location |
+| `/lcw plan` | Preview what needs to be done (no execution) |
 
-## File structure
+Default: `/lcw <anything>` that isn't a known subcommand is treated as a query.
+
+## Wiki structure
 
 ```
-~/.lcw/                  # this repo
-├── setup                # one-time install
-├── commands/            # slash command definitions (symlinked to tool)
-├── agents/              # wiki editor agent (OpenCode)
-└── templates/           # __wiki__/ scaffolding for /lcw init
-
-your-workspace/
-├── repo-alpha/          # code repo (read-only)
-├── repo-beta/           # code repo (read-only)
-└── __wiki__/            # LLM-maintained wiki
-    ├── SCHEMA.md        # structure conventions and page templates
-    ├── overview.md      # cross-repo architecture overview
-    ├── index.md         # page catalog (LLM reads this first)
-    ├── log.md           # chronological operation log
-    ├── repos/           # one page per repo
-    ├── modules/         # one page per major module
-    ├── interfaces/      # cross-repo integration points
-    ├── concepts/        # patterns, conventions, shared abstractions
-    ├── decisions/       # architecture decision records
-    ├── issues/          # problems, contradictions, tech debt
-    ├── queries/         # saved analysis from conversations
-    └── activities/        # commit-activity buckets (one per repo per natural month)
+wiki-project/                # project root = wiki root
+├── repos.md                 # repo registry (human-maintained)
+├── SCHEMA.md                # page templates
+├── index.md                 # page catalog
+├── log.md                   # operation log
+├── overview.md              # cross-repo architecture overview
+├── glossary.md              # business glossary (as-is + to-be)
+├── repos/                   # one page per repo
+├── modules/{repo}/          # module pages, grouped by repo
+├── domains/                 # business domains
+├── interfaces/              # cross-repo integration points
+├── flows/                   # end-to-end business flows
+├── issues/                  # code-level problems and tech debt
+├── ddd/                     # reverse DDD output (strategic/tactical/evolution)
+├── legacy/                  # old pages that couldn't be migrated (optional)
+├── .sources/                # cloned source code (gitignored)
+├── .inputs/                 # sources layer (committed)
+│   ├── queries/             # query records (questions, thinking paths)
+│   └── notes/               # human input (business context, decisions)
+└── .claude/skills/lcw/      # LCW skill (symlink)
 ```
 
 ## Supported tools
 
-| Tool | Commands location | Setup |
-|------|-------------------|-------|
-| Claude Code | `~/.claude/commands/` | auto-detected |
-| Codex | `~/.codex/commands/` | `--host codex` |
-| OpenCode | `~/.opencode/commands/` + agent | `--host opencode` |
+| Tool | Skill location | Setup |
+|------|---------------|-------|
+| Claude Code | `.claude/skills/lcw/` | default |
+| Codex | `.codex/skills/lcw/` | `--host codex` |
+| OpenCode | `.opencode/skills/lcw/` | `--host opencode` |
+| Windsurf | `.windsurf/skills/lcw/` | `--host windsurf` |
+
+## LCW repo structure
+
+```
+~/.lcw/                      # this repo
+├── setup                    # project-level installer
+├── skills/lcw/              # self-contained skill
+│   ├── SKILL.md             # main skill definition
+│   ├── references/          # per-command details (loaded on demand)
+│   ├── templates/           # wiki scaffolding for /lcw init
+│   └── agents/              # specialized agents (OpenCode)
+├── SPEC.md                  # requirements baseline
+├── README.md                # this file
+└── llm-wiki.md              # original concept
+```
 
 ## Design
 
-See [llm-wiki.md](llm-wiki.md) for the original concept and [wiki-opencode-commands.md](wiki-opencode-commands.md) for design notes on the multi-repo adaptation.
+See [llm-wiki.md](llm-wiki.md) for the original concept.

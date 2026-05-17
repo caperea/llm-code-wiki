@@ -12,7 +12,7 @@
 
 - 所有 `ddd/` 目录下的产出
 - `issues/*.md` — 已知问题
-- `activities/*.md` — 变更频率数据（如果有）
+- `git log`（.sources/ 内）— 变更频率数据
 
 ### 分析步骤
 
@@ -25,7 +25,7 @@
 | 烟囱程度 | `ddd/panorama.md` 烟囱报告章节 | 有多少重复实现？ |
 | 耦合度 | `ddd/contexts.md` 映射关系章节 + `interfaces/*.md` | 跨上下文依赖有多紧？ |
 | 模型健康度 | `ddd/tactical/*.md` | 贫血程度、聚合边界清晰度 |
-| 变更频率 | `activities/*.md` | 过去 N 个月改动频率 |
+| 变更频率 | `git log`（.sources/ 内） | 过去 N 个月改动频率 |
 | 问题密度 | `issues/*.md` | 该区域的问题数量和严重度 |
 
 #### 2. 优先级排序

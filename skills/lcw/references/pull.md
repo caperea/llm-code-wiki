@@ -34,7 +34,7 @@ pull 是 ingest/sync 的前置步骤：先有代码，才能摄入知识。但 i
 ## 克隆策略
 
 - 默认**浅克隆**（`--depth 1`）：节省空间，够 ingest 用
-- 当 sync 或 activities 需要历史时，自动 `git fetch --unshallow` 加深
+- 当 sync 或 DDD 需要历史时，自动 `git fetch --unshallow` 加深
 - `repos/{name}.md` 的 frontmatter 记录 `clone_depth: shallow | full`
 
 ## 输出格式

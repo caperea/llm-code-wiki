@@ -16,6 +16,14 @@ LCW 是一个**基于代码仓库的知识库**，同时服务人和 AI：
 
 个人使用，未来可能扩展到团队。当前不需要多人协作能力，但知识库内容本身应该可以用 git 共享。
 
+## 浏览方式
+
+Wiki 的人类浏览端是 Obsidian。wiki 项目目录直接作为 Obsidian vault 打开，人通过 Obsidian 浏览页面、跟踪链接、查看 graph view。这意味着：
+
+- 所有 wiki 页面使用 Obsidian 兼容的 markdown 格式和 `[[wikilink]]` 语法
+- 页面应对人类阅读友好（不是只给 LLM 看的中间产物）
+- Obsidian 插件（graph view、Dataview、Marp 等）是合法的消费方式，页面的 frontmatter 和结构应便于这些工具使用
+
 ## 规模要求
 
 - 支撑数百到上千个代码仓库

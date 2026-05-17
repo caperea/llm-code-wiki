@@ -362,7 +362,7 @@ ddd/
 
 `.inputs/` 是 source 层，不是 wiki 层。存放用户的提问记录和反馈信息，供 ingest/sync/query 读取利用。提交到 git。
 
-### .inputs/queries/{name}.md
+### .inputs/queries/{YYYY-MM-DD}-{name}.md
 
 查询记录——能激发出新知识的问题和发现路径。由 query 的对话扫尾步骤自动写入。
 
@@ -379,7 +379,7 @@ covered_by_ingest: false
 
 ingest 完成后会标注 `covered_by_ingest: true`，表示该问题涉及的知识已被系统性覆盖。
 
-### .inputs/notes/{name}.md
+### .inputs/notes/{YYYY-MM-DD}-{name}.md
 
 用户提供的非代码信息——业务背景、历史决策原因、团队约定。由 query 的对话扫尾步骤或人反馈处理自动写入。
 

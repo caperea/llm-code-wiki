@@ -194,7 +194,7 @@ merge 不是简单的文件拼接。它的独特价值是**跨 wiki 接口发现
 
 1. 确保当前目录已初始化（未初始化则先 init）
 2. **合并 repos.md**：汇总所有源 wiki 的 repo 清单，去重
-3. **合并 .sources/**：对每个 repo，从源 wiki 的 .sources/ 完整复制到新 wiki（确保新 wiki 自包含）。如果源 wiki 的 .sources/ 中某个 repo 不存在，标记需要后续 `/lcw pull`
+3. **合并 .sources/**：对每个 repo，从源 wiki 的 .sources/ 完整复制到新 wiki（不要用 symlink——源 wiki 可能被移动、删除或在别的机器上，新 wiki 必须自包含）。如果源 wiki 的 .sources/ 中某个 repo 不存在，标记需要后续 `/lcw pull`
 4. **合并 .inputs/**：复制所有源 wiki 的 queries/ 和 notes/，文件名加来源前缀（如 `wiki-a--query-name.md`）避免冲突
 5. **合并 repos/ 页面**：
    - 无重叠：复制

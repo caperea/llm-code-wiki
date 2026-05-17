@@ -104,7 +104,7 @@ DDD 分析过程中发现的内容回写到 wiki：
 
 - 新发现的问题 → 创建 `issues/*.md`
 - 术语的领域定义和差距 → 更新 `glossary.md` 条目的 DDD 字段（领域定义、差距、决策、消解状态）
-- 新发现的概念 → 创建 `concepts/*.md`
+- 新发现的模式或规则 → 融入相关 `domains/*.md` 或 `modules/` 页面
 - 领域的 DDD 定位 → 更新 `domains/*.md` 的 `ddd_context`/`ddd_status` frontmatter 字段 + 底部"DDD 视角"章节
 
 DDD 不修改 `modules/*.md`、`repos/*.md` 的主体内容——这些是代码事实，由 ingest/sync/lint 维护。对于 `domains/*.md`，DDD 只写入 frontmatter 的 DDD 字段和底部的"DDD 视角"章节，不修改主体内容。对于 `glossary.md`，DDD 只写入 DDD 字段，不修改"现状用法"。

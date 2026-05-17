@@ -11,13 +11,12 @@
 1. 读取 `repos/{name}.md` 的 `last_synced_commit`
 2. 用 `git log {sha}..HEAD` 查看新提交
 3. 如果变更 >50 文件或大规模重构 → 建议 `/lcw ingest`
-4. 更新受影响的模块、接口、决策、问题页面
+4. 更新受影响的模块、接口、问题页面
 5. 更新 `last_synced` 和 `last_synced_commit`
 
 **关注点**：
 - 接口变动 → 更新 interfaces/
-- 架构决策 → 创建 decisions/
-- 新问题 → 创建 issues/
+- 新发现的问题 → 创建 issues/
 - 业务词汇变动 → 更新 glossary.md
 - 领域模型变更 → 更新 domains/
 

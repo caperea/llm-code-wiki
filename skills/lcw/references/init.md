@@ -17,10 +17,8 @@
 ├── repos/
 ├── modules/
 ├── interfaces/
-├── concepts/
-├── decisions/
 ├── issues/
-├── queries/
+├── notes/         # 人类输入（未验证线索）
 ├── flows/
 ├── domains/
 ├── activities/

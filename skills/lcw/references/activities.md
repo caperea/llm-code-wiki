@@ -51,7 +51,7 @@ activities/
    git log --since=... --until=... --name-only --pretty=format:"%h|%ae|%an" --no-merges
    ```
 3. **升维**（关键步骤，不是简单转写）
-   - 文件路径 → 模块映射：用现有 `modules/{repo}--{module}.md` 中的 module 字段把文件归到模块
+   - 文件路径 → 模块映射：用现有 `modules/{repo}/{module}.md` 中的 module 字段把文件归到模块
    - commit subject 前缀粗分类：feat / fix / refactor / chore / docs / test / perf / ci
    - 高影响提交识别：≥10 文件 或 ≥500 LOC（默认阈值，可在 frontmatter 注记）
    - 作者聚焦模块：每作者 ≥80% 提交落在哪些模块
@@ -90,7 +90,7 @@ activities/
    - 描述事实，不打分
    - 区分**信息来源**：哪些是从桶里直接读出的事实，哪些是 LLM 综合推断
    - 不泄漏作者邮箱
-6. `--archive` → 把回答写入 `queries/activities-{from}--{to}.md`，并在 log.md 记录
+6. `--archive` → 把回答融入相关 `domains/` 或 `modules/` 页面的活动总结章节，并在 log.md 记录
 
 ## 与主线 wiki 的边界
 

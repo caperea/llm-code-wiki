@@ -47,7 +47,7 @@
 - `flows/{name}.md` — 核心业务流程
 - `domains/{name}.md` — 业务领域
 - `repos/{name}.md` — 仓库主页
-- `modules/{repo}--{module}.md` — 模块页面
+- `modules/{repo}/{module}.md` — 模块页面
 - `interfaces/` — 跨 repo 接口
 - 更新 `overview.md`、`glossary.md`
 

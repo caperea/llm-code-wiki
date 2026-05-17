@@ -15,14 +15,19 @@ mkdir ~/wiki-unified && cd ~/wiki-unified
 
 merge 不是简单的文件拼接。它的独特价值是**跨 wiki 接口发现**——源 wiki 各自只看到接口的一端（wiki-A 知道 repo-X 调用了某个外部服务，wiki-B 知道 repo-Y 提供了那个服务），合并后才能看到两端并建立 interfaces/ 页面。
 
+## 前置校验
+
+所有源 wiki 的 schema_version 必须一致，否则拒绝合并。版本不一致时报错并提示用户先对落后的 wiki 执行 `/lcw migrate` 升级到最新版本。
+
 ## 阶段一：扫描源 wiki
 
 对每个源 wiki：
 
 1. 验证是 LCW wiki（检查 index.md、SCHEMA.md 存在）
-2. 读取 repos.md、index.md、SCHEMA.md（记录 schema_version）
-3. 统计：repo 数、页面数、领域数、流程数
-4. 检查 .sources/ 是否存在且可访问
+2. 读取 SCHEMA.md 的 schema_version——**版本不一致则停止，报错并列出各 wiki 的版本**
+3. 读取 repos.md、index.md
+4. 统计：repo 数、页面数、领域数、流程数
+5. 检查 .sources/ 是否存在且可访问
 
 产出：源 wiki 摘要表。
 
@@ -86,8 +91,7 @@ merge 不是简单的文件拼接。它的独特价值是**跨 wiki 接口发现
 3. **重叠处理方案**：逐项列出重叠 repo 和 domain 的处理决策
 4. **词汇表冲突清单**：每个冲突术语的两边定义
 5. **跨 wiki 接口候选**：新发现的接口关系
-6. **Schema 兼容性**：如有版本差异，说明会按最新版本统一
-7. **风险提示**：大规模合并可能需要较长时间，建议逐步验证
+6. **风险提示**：大规模合并可能需要较长时间，建议逐步验证
 
 等用户确认后继续。用户可以调整计划（如"那两个 domain 其实应该合并"），按调整后的方案重新展示。
 

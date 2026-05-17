@@ -8,6 +8,7 @@
 
 ## 单 repo 模式
 
+0. 读取 `.inputs/queries/` 和 `.inputs/notes/` 中与本 repo 相关的内容，关注历史问题涉及的模块和路径——如果这些区域有变更，优先同步
 1. 读取 `repos/{name}.md` 的 `last_synced_commit`
 2. 用 `git log {sha}..HEAD` 查看新提交
 3. 如果变更 >50 文件或大规模重构 → 建议 `/lcw ingest`

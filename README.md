@@ -76,7 +76,7 @@ All commands follow a unified pattern: `/lcw <action> [repo]` — with a repo na
 | `/lcw ddd [layer] [context]` | Reverse DDD from code (strategic, tactical, evolution, audit) |
 | `/lcw migrate` | Migrate old wiki to current structure |
 | `/lcw migrate <path> <intent>` | Recover specific files from `legacy/` to a target location |
-| `/lcw plan` | Preview what needs to be done (no execution) |
+| `/lcw plan [command]` | Preview what needs to be done (no execution); optionally filter by command |
 
 Default: `/lcw <anything>` that isn't a known subcommand is treated as a query.
 

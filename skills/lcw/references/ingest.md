@@ -16,6 +16,7 @@
 
 **分析阶段（只读）**：
 
+0. **读取 .inputs/**：扫描 `.inputs/queries/` 和 `.inputs/notes/`，提取与本 repo 相关的历史问题和用户反馈。这些信息指导后续分析的优先级——被问过的领域优先深入，用户提供的业务背景用于解读代码语义
 1. **扫描结构**：识别语言、框架、入口点，划分模块边界
 2. **规模评估**：主要模块 >15 个时切换分批模式
 3. **代码通道**：提取公共 API、依赖关系、关键数据类型、业务词汇
@@ -50,6 +51,7 @@
 - `modules/{repo}/{module}.md` — 模块页面
 - `interfaces/` — 跨 repo 接口
 - 更新 `overview.md`、`glossary.md`
+- 检查 `.inputs/queries/` 中是否有本次 ingest 已覆盖的问题，在对应 query 文件中标注 `covered_by_ingest: true`
 
 **输出格式**：
 
@@ -63,8 +65,8 @@
 
 ### 创建页面
 - repos/{name}.md
-- modules/{name}--auth.md
-- modules/{name}--order.md
+- modules/{name}/auth.md
+- modules/{name}/order.md
 - ...
 
 ### 未覆盖目录

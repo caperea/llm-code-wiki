@@ -78,6 +78,7 @@ Update: `cd ~/.lcw && git pull` — symlinks pick up changes automatically.
 /lcw file auth-flow-analysis # save an insight to the wiki
 /lcw ddd strategic           # reverse DDD: strategic layer
 /lcw plan                    # preview what needs to be done
+/lcw merge ~/wiki-a ~/wiki-b # merge multiple wikis into one
 /lcw migrate                 # migrate old wiki to current structure
 ```
 
@@ -121,6 +122,7 @@ All commands follow a unified pattern: `/lcw <action> [repo]` — with a repo na
 | `/lcw file <name>` | Distill conversation insights into wiki pages |
 | `/lcw ddd [layer] [context]` | Reverse DDD from code (strategic, tactical, evolution, audit) |
 | `/lcw plan [command]` | Preview what needs to be done; optionally filter by command |
+| `/lcw merge <wiki>...` | Merge multiple wiki projects into one; detect overlaps and cross-wiki interfaces |
 | `/lcw migrate` | Migrate old wiki to current structure |
 
 Default: `/lcw <anything>` that isn't a known subcommand is treated as a query.
@@ -253,6 +255,7 @@ git clone https://github.com/caperea/llm-code-wiki.git ~/.lcw
 /lcw file auth-flow-analysis # 归档洞察到 wiki
 /lcw ddd strategic           # 反向 DDD：战略层
 /lcw plan                    # 预览待办事项
+/lcw merge ~/wiki-a ~/wiki-b # 合并多个 wiki 为一个
 /lcw migrate                 # 迁移旧 wiki 到当前结构
 ```
 
@@ -296,6 +299,7 @@ LLM 从每个 repo 中提取两类信息：
 | `/lcw file <名称>` | 把对话洞察归档到 wiki |
 | `/lcw ddd [层] [上下文]` | 反向 DDD（战略层、战术层、演进层、漂移检测） |
 | `/lcw plan [命令]` | 预览待办事项，可按命令过滤 |
+| `/lcw merge <wiki>...` | 合并多个 wiki 项目；检测重叠和跨 wiki 接口 |
 | `/lcw migrate` | 迁移旧 wiki 到当前结构 |
 
 默认行为：`/lcw <任意内容>` 如果不是已知子命令，一律视为查询。

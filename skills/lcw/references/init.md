@@ -16,6 +16,7 @@
 ├── repos.md       # 代码仓库清单（人维护）
 ├── repos/
 ├── modules/       # 按仓库分子目录：modules/{repo}/
+├── systems/       # 系统拓扑（多 repo 组成的系统单元）
 ├── interfaces/    # 跨 repo 接口
 ├── issues/
 ├── flows/

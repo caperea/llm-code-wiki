@@ -17,7 +17,8 @@ wiki-project/                  # 项目根目录 = wiki 根目录
 ├── repos/                     # 每个仓库的 wiki 页面（工具维护，含同步状态）
 ├── modules/                   # 模块页面，按仓库分子目录
 │   └── {repo}/
-├── interfaces/                # 跨 repo 接口
+├── systems/                   # 系统拓扑（多个 repo 组成的系统单元）
+├── interfaces/                # 跨 repo 接口（保留 repo 粒度，systems/ 做汇总）
 ├── issues/                    # 代码事实层的问题（实然）
 ├── flows/                     # 端到端业务流程（Event Storming 事件流）
 ├── domains/

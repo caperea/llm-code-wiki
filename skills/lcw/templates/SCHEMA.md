@@ -61,7 +61,8 @@ wiki-project/               # 项目根目录 = wiki 根目录
 ├── repos/                  # 仓库级 wiki 页面（工具维护，含同步状态）
 ├── modules/                # 模块页面，按仓库分子目录
 │   └── {repo}/             # 每个仓库一个子目录
-├── interfaces/             # 跨 repo 接口页面
+├── systems/                # 系统拓扑（多个 repo 组成的系统单元，AI 推断并维护）
+├── interfaces/             # 跨 repo 接口页面（保留 repo 粒度，systems/ 做系统间汇总）
 ├── issues/                 # 代码事实层发现的问题和技术债（实然）
 ├── ddd/                    # 反向 DDD 梳理产出（应然）
 │   ├── tactical/           # 战术层（每个上下文一组文件）
@@ -78,6 +79,7 @@ wiki-project/               # 项目根目录 = wiki 根目录
 | 领域 | `domains/{domain-name}.md` | `domains/ordering.md` |
 | 仓库 | `repos/{repo-name}.md` | `repos/alpha.md` |
 | 模块 | `modules/{repo}/{module}.md` | `modules/alpha/auth.md` |
+| 系统 | `systems/{system-name}.md` | `systems/payment.md` |
 | 接口 | `interfaces/{描述性名称}.md` | `interfaces/alpha-beta-grpc.md` |
 | 问题 | `issues/{描述性名称}.md` | `issues/stale-api-v1.md` |
 | DDD 战略 | `ddd/{产出类型}.md` | `ddd/panorama.md` |
@@ -291,6 +293,32 @@ last_synced_commit: {git short sha}
 必含章节：做什么、代码结构、公共 API、内部逻辑摘要、依赖关系（上游/下游）
 
 可选章节：领域模型笔记（聚合边界、实体 vs 值对象、贫血模型警告）
+
+### systems/{name}.md
+
+```yaml
+---
+system: {name}                     # e.g. "payment", "risk-control"
+repos: [组成该系统的 repo 列表]
+domains: [该系统服务的业务领域]       # 链接到 domains/
+confidence: high | medium | low    # 系统边界推断置信度
+last_synced: {YYYY-MM-DD}
+---
+```
+
+系统拓扑页——介于 overview（全局）和 repos/（单仓库）之间的中间层。一个 system = 一组紧密协作的 repo，对外表现为一个整体。
+
+**划分由 AI 在 ingest 时推断**（基于 repo 间调用密度、共享数据、部署耦合等信号），query 和 lint 持续审视并调整。
+
+**与 domains/ 的关系**：domains/ 是业务视角（"支付领域处理计费、开票、退款"），systems/ 是系统视角（"支付系统 = 3 个 repo，内部用 event bus，对外暴露 gRPC"）。两者有时重合，有时不重合（一个领域跨多个系统，或一个系统服务多个领域）。
+
+必含章节：
+
+- **职责**：一句话描述这个系统整体做什么
+- **内部架构**：包含哪些 repo、repo 之间怎么连接（内部拓扑图 + 数据流）。链接到 `[[repos/...]]` 和 `[[modules/...]]`
+- **对外接口**：该系统暴露什么能力、被哪些系统调用。链接到 `[[interfaces/...]]`
+- **依赖的外部系统**：调用了哪些其他系统。链接到 `[[systems/...]]` 和 `[[interfaces/...]]`
+- **数据一致性**：系统内部和跨系统的一致性机制概述
 
 ### interfaces/{name}.md
 

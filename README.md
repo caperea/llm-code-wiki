@@ -140,6 +140,7 @@ wiki-project/                # project root = wiki root
 ├── repos/                   # one page per repo
 ├── modules/{repo}/          # module pages, grouped by repo
 ├── domains/                 # business domains
+├── systems/                 # system topology (groups of collaborating repos)
 ├── interfaces/              # cross-repo integration points
 ├── flows/                   # end-to-end business flows
 ├── issues/                  # code-level problems and tech debt
@@ -317,6 +318,7 @@ wiki-project/                # 项目根目录 = wiki 根目录
 ├── repos/                   # 每个仓库一页
 ├── modules/{repo}/          # 模块页面，按仓库分组
 ├── domains/                 # 业务领域
+├── systems/                 # 系统拓扑（多 repo 协作的系统单元）
 ├── interfaces/              # 跨 repo 接口
 ├── flows/                   # 端到端业务流程
 ├── issues/                  # 代码事实层的问题和技术债

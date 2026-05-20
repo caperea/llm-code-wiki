@@ -6,6 +6,13 @@
 
 ## 检查与修复流程
 
+### 前置检查：Schema 版本
+
+对比项目根目录 `SCHEMA.md` 中的 `schema_version` 与 LCW 技能 `templates/SCHEMA.md` 的版本号。
+
+- **版本一致** → 继续后续检查
+- **版本落后** → 在报告中警告"Schema 版本落后（项目 vN，当前 vM），建议运行 `/lcw migrate` 升级"。不自动升级（migrate 需要用户确认），但后续检查仍按当前项目的 schema 版本执行（不用新版标准判断旧版页面）
+
 ### 第一阶段：Drift 检测与修复（最重要）
 
 对每个已摄入的 repo：

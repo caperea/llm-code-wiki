@@ -25,6 +25,8 @@ mode: "subagent"
 
 对所引用的页面，读 `.sources/{repo}/` 中的实际代码验证关键 claim（API 签名、数据结构、状态枚举、调用关系）。至少抽查 1-2 个核心 claim，即使页面看起来 fresh。
 
+**代码导航策略**：优先使用 LSP（goToDefinition、findReferences、hover）进行符号级精确导航。LSP 能直接定位同名符号的正确定义、追踪调用链、获取类型信息，避免 grep 在大代码库中返回大量无关匹配。LSP 不可用时回退到 grep + read。
+
 如果回答涉及可能有歧义的业务术语，检查 `glossary.md` 中该术语的条目（grep 定位，不需全量读）。
 
 ### 4. 修复

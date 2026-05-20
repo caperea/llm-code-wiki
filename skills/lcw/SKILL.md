@@ -190,37 +190,29 @@ wiki 中的内容严格分为两层，**写入和回答时都必须保持这个�
 
 查询 wiki 知识库。`/lcw <question>` 等同于 `/lcw query <question>`。
 
-**设计理念**：查询在独立 subagent 中执行——subagent 拥有完整上下文窗口，可以自由读取多个 wiki 页面和源码而不受主对话上下文限制。主 agent 负责编排和对话连续性，subagent 负责深度查询和验证。查询仍然是维护的机会：subagent 发现的不一致会触发 maintenance subagent 自动修复。
+**设计理念**：所有查询一律在独立 subagent 中执行闭环（查→验→修→log）。subagent 拥有完整上下文窗口，可以自由读取多个 wiki 页面和源码；同时在内部完成验证和修复，确保"查询即维护"确定性发生。主 agent 只负责编排和对话连续性。
 
 **流程**：
 
-1. **判断复杂度**：
-   - 简单问题（"有哪些 repo"、"index 里有什么"、wiki 操作问题）→ 直接读 index.md 回答，不启动 subagent
-   - 需要理解业务逻辑、架构、模块职责、跨 repo 关系、代码验证 → 启动 query subagent
-   - 不确定时默认走 subagent
-
-2. **组装 brief**（启动 subagent 时传入）：
+1. **组装 brief**：
    - 用户问题原文
    - 如果是 follow-up：前轮答案的关键要点（2-3 句摘要，确保 subagent 理解上下文）
    - wiki 项目路径
 
-3. **启动 Query Subagent**（`agents/query.md`）：subagent 会返回 answer + confidence + findings
+2. **启动 Query Subagent**（`agents/query.md`）：subagent 内部完成查询、源码验证、wiki 修复、写 log 的完整闭环。返回 answer + confidence + fixes
 
-4. **Relay 答案**：将 subagent 的 answer 作为回答传达给用户。如有 glossary_note 一并说明
+3. **Relay 答案**：将 subagent 的 answer 传达给用户。如有 fixes，告知用户"顺带更新了 N 处知识库内容：{摘要}"。如有 glossary_note 一并说明
 
-5. **触发维护**（如有 findings）：
-   - 告知用户"发现 N 处知识库内容需要更新"
-   - 启动 Maintenance Subagent（`agents/wiki.md` 的 Deferred Maintenance 模式），传入 findings 列表
-   - 维护完成后简要告知用户更新了什么
+4. **后置通知**：如果 subagent 的验证发现了影响先前回答准确性的不一致，明确告知用户修正了什么、对回答的影响
 
 **对话扫尾**（静默）：
 
-6. 如果用户在对话中提供了代码中不存在的信息（业务背景、历史原因等）→ 存入 `.inputs/notes/`（格式：`{YYYY-MM-DD}-{描述性名称}.md`）
-7. 如果本次查询触发了源码回溯或发现了 wiki 覆盖盲区 → 存入 `.inputs/queries/`（含问题、发现路径、涉及的 repo/模块）。普通查询无特殊发现则不保存
+5. 如果用户在对话中提供了代码中不存在的信息（业务背景、历史原因等）→ 存入 `.inputs/notes/`（格式：`{YYYY-MM-DD}-{描述性名称}.md`）
+6. 如果本次查询发现了 wiki 覆盖盲区 → 存入 `.inputs/queries/`（含问题、发现路径、涉及的 repo/模块）
 
 **人反馈处理**：
 1. 验证反馈：读取用户指出的源码
-2. 验证通过 → 启动 maintenance subagent 更新 wiki
+2. 验证通过 → 启动 query subagent 执行修复（同样走闭环）
 3. 验证不通过 → 解释并引用代码
 4. 无法确定且是代码层面的问题 → 创建 issues/ 页面，标记"待确认"
 5. 用户提供的信息无法用代码验证 → 存入 `.inputs/notes/`

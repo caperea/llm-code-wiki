@@ -89,5 +89,50 @@ for HOST in $HOSTS; do
   link_skill "$PROJECT/$SKILL_DIR"
 done
 
+# ─── Install hooks (Claude Code only) ────────────────────────
+
+install_hooks() {
+  local settings="$PROJECT/.claude/settings.json"
+  local hooks_dir="$LCW_DIR/hooks"
+
+  # Only install if Claude is one of the target hosts
+  echo "$HOSTS" | grep -q "claude" || return 0
+
+  # Check if hooks scripts exist
+  [ -f "$hooks_dir/lcw-log-check.sh" ] || return 0
+
+  # Create settings.json if it doesn't exist
+  if [ ! -f "$settings" ]; then
+    mkdir -p "$PROJECT/.claude"
+    echo '{}' > "$settings"
+  fi
+
+  # Check if hooks are already configured (avoid duplicates)
+  if grep -q "lcw-log-check" "$settings" 2>/dev/null; then
+    echo "  hooks: already configured"
+    return 0
+  fi
+
+  # Add hooks using a simple approach — merge into existing settings
+  local tmp=$(mktemp)
+  if command -v python3 &>/dev/null; then
+    python3 -c "
+import json, sys
+with open('$settings') as f:
+    cfg = json.load(f)
+cfg.setdefault('hooks', {}).setdefault('Stop', [])
+cfg['hooks']['Stop'].append({'matcher': '', 'command': '$hooks_dir/lcw-log-check.sh'})
+cfg['hooks']['Stop'].append({'matcher': '', 'command': '$hooks_dir/lcw-index-check.sh'})
+with open('$tmp', 'w') as f:
+    json.dump(cfg, f, indent=2)
+" && mv "$tmp" "$settings" && echo "  hooks: installed (Stop: log-check, index-check)"
+  else
+    rm -f "$tmp"
+    echo "  hooks: skipped (python3 not found for JSON merge)"
+  fi
+}
+
+install_hooks
+
 echo ""
 echo "Run /lcw init in the project to create the wiki."

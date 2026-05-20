@@ -29,3 +29,18 @@ mode: "subagent"
 - **wiki 页面 frontmatter 缺失或损坏**：按 SCHEMA.md 模板补全
 - **index.md 与实际文件不一致**：以实际文件为准，自动修复 index
 - **`last_synced_commit` 指向不存在的 commit**：回退到按 `last_synced` 日期过滤，在 log 中记录
+
+---
+
+## Deferred Maintenance 模式
+
+当收到来自 query subagent 的 **findings 列表**（wiki 与代码不一致的条目）时，执行以下流程：
+
+1. **逐项确认**：对每条 finding，读取 `.sources/` 中引用的代码确认不一致确实存在
+2. **修正 wiki**：更新受影响的页面，引用源码路径作为证据
+3. **术语检查**：如果修正涉及业务术语，检查 `glossary.md` 中该条目是否需要同步更新
+4. **级联更新**：如果修正改变了某个被其他页面 `[[wikilink]]` 引用的概念，一并更新引用页面
+5. **写 log.md**：记录所有修正（格式见 SKILL.md 日志格式段落）
+6. **更新 index.md**：如果有页面新增或删除
+
+**返回**：修复摘要——列出修改了哪些页面、每页改了什么、修复依据（代码路径）

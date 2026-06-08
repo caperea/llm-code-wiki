@@ -16,15 +16,21 @@
 
 **分析阶段（只读）**：
 
+> 凡是读 `.sources/` 的步骤都按 `references/code-navigation.md` 选工具——下面在关键步骤就地标注首选操作，其余按映射表执行。
+
 0. **读取 .inputs/**：扫描 `.inputs/queries/` 和 `.inputs/notes/`，提取与本 repo 相关的历史问题和用户反馈。这些信息指导后续分析的优先级——被问过的领域优先深入，用户提供的业务背景用于解读代码语义
-1. **扫描结构**：识别语言、框架、入口点，划分模块边界
+1. **扫描结构**：识别语言、框架、入口点，划分模块边界（`Glob` + 目录树）
 2. **规模评估**：主要模块 >15 个时切换分批模式
-3. **代码通道**：提取公共 API、依赖关系、关键数据类型、业务词汇
-4. **数据库 Schema 分析**：识别上帝表（30+ 字段）、共享表、外键关系
-5. **状态机提取**：扫描 status 枚举、转换逻辑、实体生命周期
-6. **领域模型识别**：实体 vs 值对象、聚合根、模型风格（rich/anemic/procedural/functional）
-7. **笔记通道**：读取 README、CHANGELOG、关键注释、最近 commit
-8. **基础设施通道**：消息流分析、跨切面关注点
+3. **代码通道**：
+   - 提取公共 API：对每个模块入口文件用 `documentSymbol` 拿全部顶层符号 + 层次，比逐行 grep 函数定义快且准
+   - 依赖关系：对关键类型/接口用 `findReferences`——grep import 漏 import 别名和动态导入
+   - 关键数据类型：`workspaceSymbol` 按命名约定（如 `*Entity`、`*Aggregate`、`*Model`）找入口，再 `documentSymbol` 拿成员
+   - 业务词汇：从符号名 + 文档注释（`hover`）+ 注释（grep）综合提取
+4. **数据库 Schema 分析**：识别上帝表（30+ 字段）、共享表、外键关系（SQL/迁移文件用 grep；ORM 实体用 `workspaceSymbol`）
+5. **状态机提取**：`workspaceSymbol` 找 `*Status` / `*State` 枚举 → `findReferences` 定位转换逻辑和生命周期
+6. **领域模型识别**：实体 vs 值对象、聚合根、模型风格（rich/anemic/procedural/functional）——`workspaceSymbol` 找实体 → `goToImplementation` 看继承/接口关系 → `findReferences` 看被谁操作。这步是 wiki 关键判断，grep 拿不到继承关系，必须走 LSP
+7. **笔记通道**：读取 README、CHANGELOG、关键注释、最近 commit（grep + Read）
+8. **基础设施通道**：消息流分析、跨切面关注点（事件类用 `workspaceSymbol` + `findReferences` 看生产/消费两端）
 9. **交叉验证**：标记 phantom feature、undocumented、stale docs、boundary violation
 10. **领域综合**：推断业务领域边界、分类（core/supporting/generic）、追踪核心业务流程
 

@@ -25,7 +25,7 @@ mode: "subagent"
 
 对所引用的页面，读 `.sources/{repo}/` 中的实际代码验证关键 claim（API 签名、数据结构、状态枚举、调用关系）。至少抽查 1-2 个核心 claim，即使页面看起来 fresh。
 
-**代码导航策略**：优先使用 LSP（goToDefinition、findReferences、hover）进行符号级精确导航。LSP 能直接定位同名符号的正确定义、追踪调用链、获取类型信息，避免 grep 在大代码库中返回大量无关匹配。LSP 不可用时回退到 grep + read。
+**代码导航策略**：动手读 `.sources/` 之前先读 `references/code-navigation.md`。核心要点：验证 API 签名、调用关系用 `goToDefinition` / `hover`；追踪调用链用 `prepareCallHierarchy` + `incomingCalls` / `outgoingCalls`；找接口实现用 `goToImplementation`；找一段文字（错误消息、日志关键字、字面量）才用 grep。LSP 报错先换操作再退 grep，不要一报错就退。
 
 如果回答涉及可能有歧义的业务术语，用 grep 在 `glossary.md` 中定位该术语的条目并读取片段（不全量加载 glossary）。按需检查多个术语，但始终用定点访问而非全量读取。发现重复/不一致时不做 reconciliation（那是 lint 的职责），只在回答中注明歧义。
 

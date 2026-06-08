@@ -29,6 +29,8 @@
 - 该上下文涉及的 `flows/*.md` — 端到端业务流程（Event Storming 的 markdown 版本——每个 flow 已按 触发→命令→聚合→领域事件 结构组织，是提取领域事件和聚合根的主要来源）
 - 源代码 — 按需读取验证（wiki 描述可能过时，关键判断要回源码确认）
 
+> 读源码时按 `references/code-navigation.md` 选工具。战术层的核心判断（聚合边界、贫血检测、领域事件、防腐层）都建立在"符号真实身份"上——同名类、继承链、跨文件引用关系，grep 全都判断不准，必须用 LSP。
+
 ### 分析步骤
 
 #### 1. 数据模型提取
@@ -38,6 +40,8 @@
 - `modules/*.md` 的 Public API 和 Internal logic 章节
 - `domains/*.md` 的"核心实体与聚合"章节
 - 关注 frontmatter 中的 `model_style` 字段
+
+需要回源码核对时，用 `documentSymbol` 对模块入口文件拿全公共符号 + 层次，一次到位。
 
 #### 2. 聚合根识别
 
@@ -59,7 +63,7 @@
 
 如果 `model_style` 是 `anemic` 或 `procedural`：
 
-- 找出所有对该实体数据进行操作的 Service / Manager / Handler / Processor
+- **用 LSP 拿"操作分布"**：`workspaceSymbol` 找实体类 → `findReferences` 拿所有引用 → 按文件归类，看哪些 Service / Manager / Handler / Processor 在动它。grep 拿不到这种跨文件汇总
 - 判断这些操作中哪些是实体的内聚职责（应该搬进实体）
 - 哪些是跨聚合的协调逻辑（应该放在领域服务或通过领域事件解耦）
 - 哪些纯粹是基础设施关注点（应该放在应用层或基础设施层）
@@ -76,6 +80,8 @@
 - 异步通知（消息队列、事件总线中的消息）
 - 跨上下文的数据同步（一个上下文的变更触发另一个上下文的动作）
 
+回代码核对：`workspaceSymbol` 找 `*Event` / `*Message` 类 → `findReferences` 拿生产者（发布点）和消费者（订阅/handler）两端，确认 wiki 列的事件在代码里真的有双端实现。
+
 对每个领域事件记录：
 - 事件名称（过去时态，如 `PolicyEvaluated`、`RuleSetUpdated`）
 - 触发条件
@@ -91,6 +97,8 @@
 - 现有接口是"干净"的还是"脏"的？（脏 = 暴露了对方的内部实现细节）
 - 是否需要 ACL 隔离？如果需要，转换层应该做什么？
 - ACL 的方向：是保护本上下文不被外部污染，还是保护外部不被本上下文的变更影响？
+
+对每个外部依赖接口，用 `goToImplementation` 找当前实现类（看是否已经有 wrapper/adapter），用 `findReferences` 找所有调用点（看上下文里有多少地方直接耦合到外部模型）。
 
 防腐层是老系统重构的核心手段——用 ACL 把"旧的脏接口"和"新的干净模型"隔开，新模型可以在不动老代码的前提下先长出来。
 
